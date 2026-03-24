@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>McDonough Marine Survey App</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;min-height:100vh;padding:16px}
+.app{max-width:680px;margin:0 auto;padding:12px}
+.header{background:#fff;border:1px solid #e5e3db;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.logo-area h1{font-size:15px;font-weight:600;color:#1a1a18}
+.logo-area p{font-size:12px;color:#888780}
+.header-right{display:flex;align-items:center;gap:8px}
+.file-badge{font-size:11px;background:#f1efe8;border:1px solid #d3d1c7;border-radius:8px;padding:4px 10px;color:#5f5e5a}
+.save-btn{font-size:11px;padding:4px 10px;background:#E1F5EE;border:1px solid #1D9E75;border-radius:8px;color:#0F6E56;cursor:pointer;font-family:inherit}
+.save-btn:hover{background:#c8eede}
+.save-indicator{font-size:11px;color:#1D9E75;display:none}
+.step-bar{display:flex;gap:6px;margin-bottom:12px}
+.step{flex:1;height:3px;border-radius:2px;background:#d3d1c7;transition:background 0.3s}
+.step.done{background:#1D9E75}
+.step.active{background:#378ADD}
+.card{background:#fff;border:1px solid #e5e3db;border-radius:12px;padding:16px;margin-bottom:10px}
+.card-title{font-size:13px;font-weight:600;color:#888780;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px}
+.vessel-type-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.vtype{border:1px solid #e5e3db;border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;transition:all 0.15s;background:#fff}
+.vtype:hover{border-color:#b4b2a9;background:#f9f8f5}
+.vtype.selected{border:2px solid #378ADD;background:#E6F1FB}
+.vtype .icon{font-size:20px;margin-bottom:4px}
+.vtype .label{font-size:13px;font-weight:500;color:#2c2c2a}
+.vtype.selected .label{color:#185FA5}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.field-row.full{grid-template-columns:1fr}
+.field-group{display:flex;flex-direction:column;gap:4px}
+.field-label{font-size:12px;color:#888780;font-weight:500}
+input[type=text],input[type=date],select,textarea{width:100%;font-size:13px;padding:7px 10px;border:1px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;font-family:inherit;outline:none;-webkit-appearance:none;appearance:none}
+input[type=text]:focus,input[type=date]:focus,select:focus,textarea:focus{border-color:#378ADD;box-shadow:0 0 0 2px rgba(55,138,221,0.15)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888780' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+textarea{resize:vertical;min-height:80px;line-height:1.5}
+.section-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.snav-btn{font-size:12px;padding:5px 10px;border:1px solid #e5e3db;border-radius:20px;cursor:pointer;background:#fff;color:#888780;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.snav-btn:hover{border-color:#b4b2a9;color:#2c2c2a}
+.snav-btn.active{background:#378ADD;border-color:#378ADD;color:#fff}
+.def-badge{background:#E24B4A;color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:1px 5px;line-height:1.4}
+.section-block{display:none}
+.section-block.visible{display:block}
+.abbrev-table{width:100%;border-collapse:collapse;margin-bottom:10px}
+.abbrev-table td{font-size:13px;padding:6px 8px;border-bottom:1px solid #f1efe8;vertical-align:middle}
+.abbrev-table td:first-child{color:#888780;width:44%;font-size:12px;font-weight:500}
+.abbrev-table td:last-child input{width:100%;font-size:13px;padding:5px 8px;border:1px solid #e5e3db;border-radius:6px;background:#fff;color:#1a1a18;font-family:inherit;outline:none;-webkit-appearance:none}
+.abbrev-table td:last-child input:focus{border-color:#378ADD;box-shadow:0 0 0 2px rgba(55,138,221,0.12)}
+.subhead{font-size:11px;color:#888780;font-weight:600;letter-spacing:0.03em;margin:12px 0 6px}
+.voice-row{display:flex;gap:6px;align-items:flex-start}
+.voice-row textarea{flex:1}
+.mic-btn{width:36px;height:36px;min-width:36px;border:1px solid #d3d1c7;border-radius:8px;background:#f1efe8;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s;padding:0}
+.mic-btn:hover{border-color:#378ADD;background:#E6F1FB}
+.mic-btn.recording{background:#FCEBEB;border-color:#E24B4A;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.rec-row{display:flex;align-items:center;gap:8px;margin-top:4px;min-height:14px}
+.rec-dot{width:7px;height:7px;border-radius:50%;background:#E24B4A;display:none}
+.rec-dot.active{display:block;animation:pulse 1s infinite}
+.rec-label{font-size:11px;color:#888780}
+.cue-bar{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;padding:8px 10px;background:#faf9f7;border:1px solid #ede9e0;border-radius:8px;transition:opacity 0.3s}
+.cue-bar.dimmed{opacity:0.28}
+.cue{font-size:11px;color:#6b6a65;background:#f1efe8;border:1px solid #dbd9d1;border-radius:20px;padding:2px 8px;white-space:nowrap;user-select:none}
+.cue-hdr{font-size:10px;color:#b4b2a9;font-weight:600;letter-spacing:0.05em;align-self:center;margin-right:2px;white-space:nowrap}
+/* Pin strip */
+.pin-strip{display:flex;gap:6px;align-items:flex-start;margin-top:10px;padding:10px;background:#faf9f7;border:1px solid #ede9e0;border-radius:8px;flex-wrap:wrap}
+.pin-strip select{width:auto;font-size:12px;padding:6px 26px 6px 8px;border-radius:6px;flex:0 0 auto}
+.pin-strip input{flex:1;min-width:140px;font-size:12px;padding:6px 8px;border:1px solid #d3d1c7;border-radius:6px;background:#fff;color:#1a1a18;font-family:inherit;outline:none;-webkit-appearance:none}
+.pin-strip input:focus{border-color:#378ADD}
+.pin-strip input::placeholder{color:#b4b2a9}
+.pin-btn{font-size:12px;padding:6px 12px;border:1px solid #d3d1c7;border-radius:6px;background:#fff;color:#1a1a18;cursor:pointer;white-space:nowrap;flex:0 0 auto}
+.pin-btn:hover{border-color:#378ADD;color:#185FA5;background:#ebf4ff}
+.std-btn{font-size:12px;padding:6px 10px;border:1px solid #BA7517;border-radius:6px;background:#FAEEDA;color:#854F0B;cursor:pointer;white-space:nowrap;flex:0 0 auto;font-family:inherit}
+.std-btn:hover{background:#f5d99a}
+/* Standards modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
+.modal-overlay.hidden{display:none}
+.modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:680px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-header{padding:14px 16px;border-bottom:1px solid #e5e3db;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-header h3{font-size:14px;font-weight:600;color:#1a1a18}
+.modal-close{font-size:22px;color:#b4b2a9;cursor:pointer;line-height:1;padding:0 4px}
+.modal-close:hover{color:#E24B4A}
+.modal-search{padding:10px 16px;border-bottom:1px solid #f1efe8;flex-shrink:0}
+.modal-search input{width:100%;font-size:13px;padding:8px 12px;border:1px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;font-family:inherit;outline:none}
+.modal-search input:focus{border-color:#378ADD}
+.modal-cats{display:flex;gap:6px;padding:8px 16px;overflow-x:auto;border-bottom:1px solid #f1efe8;flex-shrink:0}
+.cat-btn{font-size:11px;padding:4px 10px;border:1px solid #e5e3db;border-radius:20px;cursor:pointer;background:#fff;color:#888780;white-space:nowrap;flex-shrink:0}
+.cat-btn:hover{border-color:#b4b2a9}
+.cat-btn.active{background:#378ADD;border-color:#378ADD;color:#fff}
+.modal-results{flex:1;overflow-y:auto;padding:8px 16px}
+.std-item{padding:10px 0;border-bottom:1px solid #f1efe8;cursor:pointer}
+.std-item:hover .std-item-inner{background:#f5f9ff;border-radius:8px}
+.std-item-inner{padding:8px 10px;transition:background 0.1s}
+.std-code{font-size:11px;font-weight:700;color:#BA7517;margin-bottom:2px}
+.std-title{font-size:13px;font-weight:500;color:#1a1a18;margin-bottom:3px}
+.std-text{font-size:12px;color:#5f5e5a;line-height:1.5;font-style:italic}
+.std-item:last-child{border-bottom:none}
+.no-results{font-size:13px;color:#b4b2a9;padding:16px 0;text-align:center}
+/* Def items */
+.def-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;padding:8px 10px;background:#f9f8f5;border-radius:8px;border-left:3px solid #E24B4A}
+.def-item.blue-item{border-left-color:#378ADD}
+.def-item.green-item{border-left-color:#639922}
+.def-meta{font-size:10px;font-weight:700;color:#b4b2a9;min-width:46px;padding-top:2px;line-height:1.4}
+.def-body{flex:1}
+.def-text{font-size:13px;color:#1a1a18;line-height:1.5}
+.def-src{font-size:10px;color:#b4b2a9;margin-top:2px}
+.def-remove{font-size:18px;color:#d3d1c7;cursor:pointer;line-height:1;padding:0 2px}
+.def-remove:hover{color:#E24B4A}
+.nav-btns{display:flex;gap:8px;margin-top:14px}
+.btn-primary{flex:1;padding:10px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-primary:hover{background:#0C447C}
+.btn-secondary{padding:10px 16px;background:#f1efe8;color:#1a1a18;border:1px solid #d3d1c7;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit}
+.btn-secondary:hover{border-color:#b4b2a9}
+.output-box{background:#f9f8f5;border:1px solid #e5e3db;border-radius:8px;padding:14px;font-size:12px;color:#1a1a18;white-space:pre-wrap;line-height:1.7;max-height:440px;overflow-y:auto;font-family:'Courier New',monospace}
+.copy-btn{font-size:12px;padding:6px 14px;border:1px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;cursor:pointer;margin-bottom:8px}
+.copy-btn:hover{border-color:#378ADD;color:#185FA5}
+.screen{display:none}
+.screen.active{display:block}
+.empty-note{font-size:13px;color:#b4b2a9;padding:8px 0}
+.restore-banner{background:#EAF3DE;border:1px solid #639922;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.restore-banner p{font-size:13px;color:#3B6D11}
+.restore-banner button{font-size:12px;padding:5px 12px;border:1px solid #639922;border-radius:6px;background:#fff;color:#3B6D11;cursor:pointer;white-space:nowrap;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div id="restore-banner" class="restore-banner" style="display:none">
+  <p>📋 Saved report found. Resume where you left off?</p>
+  <div style="display:flex;gap:6px">
+    <button onclick="restoreData()">Restore</button>
+    <button onclick="dismissRestore()" style="background:#f9f8f5;color:#888780;border-color:#d3d1c7">Start fresh</button>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo-area">
+    <h1>McDonough Marine Surveyors</h1>
+    <p>Inspection Report Builder</p>
+  </div>
+  <div class="header-right">
+    <span class="save-indicator" id="save-indicator">✓ Saved</span>
+    <button class="save-btn" onclick="saveData()">💾 Save</button>
+    <div class="file-badge" id="file-badge">New Report</div>
+  </div>
+</div>
+
+<div class="step-bar">
+  <div class="step active" id="s0"></div>
+  <div class="step" id="s1"></div>
+  <div class="step" id="s2"></div>
+  <div class="step" id="s3"></div>
+</div>
+
+<!-- Standards modal -->
+<div class="modal-overlay hidden" id="std-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Standards Library</h3>
+      <span class="modal-close" onclick="closeStdModal()">×</span>
+    </div>
+    <div class="modal-search">
+      <input type="text" id="std-search" placeholder="Search: 'smoke detector', 'bilge pump', 'E-11'..." oninput="filterStds()">
+    </div>
+    <div class="modal-cats" id="std-cats"></div>
+    <div class="modal-results" id="std-results"></div>
+  </div>
+</div>
+
+<!-- SCREEN 0 -->
+<div class="screen active" id="screen-0">
+  <div class="card">
+    <div class="card-title">Survey type &amp; vessel</div>
+    <div class="vessel-type-grid" style="margin-bottom:12px">
+      <div class="vtype" id="vt-powerboat" onclick="selectType('powerboat')"><div class="icon">⚓</div><div class="label">Powerboat</div></div>
+      <div class="vtype" id="vt-sailboat" onclick="selectType('sailboat')"><div class="icon">⛵</div><div class="label">Sailboat</div></div>
+      <div class="vtype" id="vt-commercial" onclick="selectType('commercial')"><div class="icon">🚢</div><div class="label">Commercial</div></div>
+      <div class="vtype" id="vt-addendum" onclick="selectType('addendum')"><div class="icon">📋</div><div class="label">Addendum</div></div>
+    </div>
+    <div class="field-row" style="margin-bottom:8px">
+      <div class="field-group"><div class="field-label">Survey type</div>
+        <select id="survey-type">
+          <option value="Pre-Purchase Inspection">Pre-Purchase Inspection</option>
+          <option value="Condition and Value">Condition &amp; Value</option>
+          <option value="Insurance">Insurance</option>
+          <option value="Damage Survey">Damage Survey</option>
+          <option value="Addendum – Sea Trial">Addendum – Sea Trial</option>
+          <option value="Addendum – Haul Out">Addendum – Haul Out</option>
+        </select>
+      </div>
+      <div class="field-group"><div class="field-label">File number</div><input type="text" id="file-num" placeholder="107A19M" oninput="updateBadge();autoSave()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><div class="field-label">Survey date</div><input type="date" id="survey-date" onchange="autoSave()"></div>
+      <div class="field-group"><div class="field-label">Survey location</div><input type="text" id="survey-loc" placeholder="Portsmouth Marina, NH" onchange="autoSave()"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Client &amp; vessel info</div>
+    <div class="field-row full"><div class="field-group"><div class="field-label">At the request of</div><input type="text" id="client-name" placeholder="Mr. John Smith, 123 Main St, Portsmouth NH" onchange="autoSave()"></div></div>
+    <div class="field-row">
+      <div class="field-group"><div class="field-label">Vessel name</div><input type="text" id="vessel-name" placeholder="KNOT TUGGIN'" onchange="autoSave()"></div>
+      <div class="field-group"><div class="field-label">Hull ID # (HIN)</div><input type="text" id="hin" placeholder="MPTCE125F898" onchange="autoSave()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><div class="field-label">Year</div><input type="text" id="year" placeholder="1998" onchange="autoSave()"></div>
+      <div class="field-group"><div class="field-label">Manufacturer</div><input type="text" id="maker" placeholder="Mainship Motor Yachts" onchange="autoSave()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><div class="field-label">Model</div><input type="text" id="model" placeholder="30 Pilot" onchange="autoSave()"></div>
+      <div class="field-group"><div class="field-label">Vessel type</div><input type="text" id="vtype-desc" placeholder="Pilot Sedan" onchange="autoSave()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><div class="field-label">LOA</div><input type="text" id="loa" placeholder="30'" onchange="autoSave()"></div>
+      <div class="field-group"><div class="field-label">Beam</div><input type="text" id="beam" placeholder='10&apos;2"' onchange="autoSave()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><div class="field-label">Draft</div><input type="text" id="draft" placeholder='2&apos;11"' onchange="autoSave()"></div>
+      <div class="field-group"><div class="field-label">Displacement</div><input type="text" id="displ" placeholder="10,000 Lbs." onchange="autoSave()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><div class="field-label">Hull color</div><input type="text" id="hull-color" placeholder="Blue with red &amp; white stripe" onchange="autoSave()"></div>
+      <div class="field-group"><div class="field-label">Registration #</div><input type="text" id="reg" placeholder="NH 2588 JZ" onchange="autoSave()"></div>
+    </div>
+    <div class="field-row full"><div class="field-group"><div class="field-label">Hull type</div><input type="text" id="hull-type" placeholder="Modified Vee, full keel" onchange="autoSave()"></div></div>
+  </div>
+  <div class="nav-btns"><button class="btn-primary" onclick="goTo(1)">Continue to Scope →</button></div>
+</div>
+
+<!-- SCREEN 1 -->
+<div class="screen" id="screen-1">
+  <div class="card">
+    <div class="card-title">Scope of survey</div>
+    <div class="field-row">
+      <div class="field-group"><div class="field-label">Inspection condition</div>
+        <select id="inspect-cond" onchange="autoSave()">
+          <option value="ashore only">Ashore only</option>
+          <option value="afloat only">Afloat only</option>
+          <option value="ashore only, sea trial scheduled separately">Ashore + sea trial scheduled</option>
+          <option value="ashore and afloat">Ashore + afloat</option>
+        </select>
+      </div>
+      <div class="field-group"><div class="field-label">Sea trial</div>
+        <select id="sea-trial" onchange="autoSave()">
+          <option value="Not performed">Not performed</option>
+          <option value="Performed">Performed</option>
+          <option value="Scheduled separately">Scheduled separately</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><div class="field-label">Vessel state</div>
+        <select id="vessel-state" onchange="autoSave()">
+          <option value="decommissioned / winterized">Decommissioned / winterized</option>
+          <option value="commissioned / operational">Commissioned / operational</option>
+          <option value="partially operational">Partially operational</option>
+        </select>
+      </div>
+      <div class="field-group"><div class="field-label">DC power available</div>
+        <select id="dc-avail" onchange="autoSave()">
+          <option value="Yes – onboard batteries">Yes – onboard batteries</option>
+          <option value="No">No</option>
+          <option value="Shore power only">Shore power only</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><div class="field-label">Weather conditions</div><input type="text" id="weather" placeholder="Overcast, above 55°F, dry" onchange="autoSave()"></div>
+      <div class="field-group"><div class="field-label">Accompanied by</div><input type="text" id="accompanied" placeholder="Prospective owner Mr. Smith" onchange="autoSave()"></div>
+    </div>
+    <div class="field-row full"><div class="field-group">
+      <div class="field-label">Additional scope notes</div>
+      <div class="voice-row">
+        <textarea id="scope-notes" placeholder="Winter cover limited access to transom / outboard well. Engine cowling not removed. AC systems scheduled for dockside testing..." oninput="autoSave()"></textarea>
+        <button class="mic-btn" onclick="toggleVoice('scope-notes',this)">🎤</button>
+      </div>
+      <div class="rec-row"><div class="rec-dot" id="rec-scope-notes"></div><div class="rec-label" id="rec-label-scope-notes"></div></div>
+    </div></div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-secondary" onclick="goTo(0)">← Back</button>
+    <button class="btn-primary" onclick="goTo(2)">Continue to Sections →</button>
+  </div>
+</div>
+
+<!-- SCREEN 2 -->
+<div class="screen" id="screen-2">
+  <div class="section-nav" id="section-nav"></div>
+  <div id="section-content"></div>
+  <div class="nav-btns">
+    <button class="btn-secondary" onclick="goTo(1)">← Back</button>
+    <button class="btn-primary" onclick="goTo(3)">Generate Report Draft →</button>
+  </div>
+</div>
+
+<!-- SCREEN 3 -->
+<div class="screen" id="screen-3">
+  <div class="card">
+    <div class="card-title">Report draft — ready for Word</div>
+    <button class="copy-btn" id="cbtn-main" onclick="doCopy('output-box','cbtn-main','Copy all text')">Copy all text</button>
+    <div class="output-box" id="output-box"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Deficiency summary</div>
+    <button class="copy-btn" id="cbtn-def" onclick="doCopy('def-output-box','cbtn-def','Copy deficiency list')">Copy deficiency list</button>
+    <div class="output-box" id="def-output-box"></div>
+  </div>
+  <div class="nav-btns"><button class="btn-secondary" onclick="goTo(2)">← Edit sections</button></div>
+</div>
+
+</div><!-- .app -->
+
+<script>
+/* ── Marine autocorrect ── */
+const MC=[
+  [/through[\s-]?hole\s+fitting/gi,'through-hull fitting'],
+  [/through[\s-]?hole/gi,'through-hull'],
+  [/sea cock/gi,'seacock'],
+  [/below water line/gi,'below waterline'],
+  [/transom hung rudder/gi,'transom-hung rudder'],
+  [/transom hung/gi,'transom-hung'],
+  [/fore stay/gi,'forestay'],[/back stay/gi,'backstay'],
+  [/stay sail/gi,'staysail'],
+  [/hull to deck/gi,'hull-to-deck'],
+  [/glass fiber|fibre glass|fibreglass/gi,'fiberglass'],
+  [/gel coat/gi,'gelcoat'],[/gel-coat/gi,'gelcoat'],
+  [/cut lass bearing/gi,'cutlass bearing'],
+  [/limber hole/gi,'limber hole'],
+  [/osmotic blistering/gi,'osmotic blistering'],
+  [/chock to chock/gi,'chock to chock'],
+  [/drive shaft/gi,'driveshaft'],
+];
+function mc(t){if(!t)return t;MC.forEach(([p,r])=>{t=t.replace(p,r)});return t;}
+
+/* ── Standards library ── */
+const STANDARDS=[
+  /* ── ABYC A-1 LPG Systems ── */
+  {code:'ABYC A-1 § 1.5.2',cat:'A-1 LPG',title:'Pressure gauge required',keywords:'LPG pressure gauge cylinder locker propane',text:'Each LPG system shall be fitted with a pressure gauge. The gauge shall read the cylinder pressure side of the pressure regulator and shall be visible when the LPG locker is open.'},
+  {code:'ABYC A-1 § 1.6.1',cat:'A-1 LPG',title:'Ignition protection in LPG compartments',keywords:'LPG ignition protection electrical compartment propane solenoid',text:'In a compartment containing LPG appliances, cylinders, fittings, valves, or regulators, all potential electrical sources of ignition shall be ignition protected and marked in accordance with ABYC E-11.'},
+  {code:'ABYC A-1 § 1.7.1',cat:'A-1 LPG',title:'No open flame devices in LPG compartment',keywords:'LPG open flame heat producing device 300 degrees compartment',text:'In a compartment containing LPG appliances, cylinders, fittings, valves, or regulators, there shall be no open flame devices, exhaust pipes, or heat producing devices capable of producing a temperature in excess of 300°F (149°C).'},
+  {code:'ABYC A-1 § 1.8.4',cat:'A-1 LPG',title:'Remote shutoff valve required if cylinder not readily accessible',keywords:'LPG shutoff valve solenoid remote accessible cylinder propane',text:'A readily accessible manual or electrically operated (e.g., solenoid) shutoff valve shall be installed in the low or high-pressure line in addition to the cylinder valve, if the cylinder valve is not readily accessible from the vicinity of the appliance.'},
+  {code:'ABYC A-1 § 1.8.6.1',cat:'A-1 LPG',title:'LPG pressure regulator required',keywords:'LPG pressure regulator propane 14 water column delivery',text:'Each LPG system shall be provided with a pressure regulator specifically designed for use with LPG. The regulator shall deliver gas at a pressure not exceeding 14 in water column (3.5 kPa).'},
+  {code:'ABYC A-1 § 1.8.6.3',cat:'A-1 LPG',title:'Low side pressure relief device required',keywords:'LPG relief valve pressure regulator discharge locker',text:'A low side pressure relief device shall be integral with each regulating system, and it shall discharge at between two and three times the delivery pressure of the regulator. All relief valve outlets shall discharge into the dedicated locker or to the open atmosphere outside the boat.'},
+  {code:'ABYC A-1 § 1.9.1',cat:'A-1 LPG',title:'LPG locker requirements',keywords:'LPG locker vapor tight above waterline corrosion resistant top opening latch',text:'Lockers used to contain LPG cylinders, valves, regulating equipment, and safety devices shall: be vapor tight to the hull interior; be located above the waterline; be constructed of corrosion resistant materials; open only from the top; be equipped with a tightly latching cover with gasket; and be capable of being quickly opened without tools.'},
+  {code:'ABYC A-1 § 1.9.2.1',cat:'A-1 LPG',title:'LPG locker – opens to outside atmosphere only',keywords:'LPG locker outside atmosphere overboard vent drain propane',text:'LPG lockers shall be installed so that the locker opens only directly to the outside atmosphere.'},
+  {code:'ABYC A-1 § 1.9.2.3',cat:'A-1 LPG',title:'LPG locker bottom vent – self-draining overboard',keywords:'LPG locker vent bottom drain overboard self-draining 1/2 inch diameter',text:'LPG lockers shall be vented in the bottom by a dedicated vent. The minimum inside diameter of any component in the vent system shall be not less than one half inch (12.7 mm). Locker vents shall be self-draining overboard, through the hull to a point lower than the locker bottom and above the waterline with the boat in the static floating position.'},
+  {code:'ABYC A-1 § 1.9.4',cat:'A-1 LPG',title:'LPG locker vent opening – 20" from hull openings',keywords:'LPG locker vent opening 20 inches hull interior propane',text:'Locker vent openings shall be located at least 20 in (508 mm) from any hull opening to the boat interior.'},
+  {code:'ABYC A-1 § 1.9.5',cat:'A-1 LPG',title:'LPG locker – no other equipment stored',keywords:'LPG locker storage equipment other gear propane only cylinders',text:'LPG lockers shall not be used for storage of any equipment other than LPG cylinders, valves, regulating equipment, and LPG safety devices.'},
+  {code:'ABYC A-1 § 1.10.2',cat:'A-1 LPG',title:'LPG fuel line – UL 21 hose or copper tubing',keywords:'LPG fuel hose UL 21 copper tubing propane supply line',text:'LPG fuel supply line shall comply with UL 21, LP Gas Hose, or be corrosion resistant metallic tubing such as annealed copper tubing, Grade K or L, with a wall thickness of not less than 0.032 in (0.813 mm).'},
+  {code:'ABYC A-1 § 1.10.5.3',cat:'A-1 LPG',title:'LPG fuel lines – supported to prevent vibration',keywords:'LPG fuel line supported clips straps vibration chafing propane',text:'Fuel supply lines shall be supported by clips or straps or other suitable means such as conduit or tray to prevent vibration damage, and shall be designed to prevent cutting, abrading, or damage to the lines.'},
+  {code:'ABYC A-1 § 1.10.5.4',cat:'A-1 LPG',title:'LPG lines – protected from chafing at hull penetrations',keywords:'LPG fuel line chafing bulkhead penetration hull structure propane',text:'Fuel supply lines passing through openings in the boat structure shall be secured and routed so that they will not chafe on the boat structure or equipment. Where the fuel supply line passes through watertight bulkheads, the integrity of that watertight bulkhead shall be maintained.'},
+  {code:'ABYC A-1 § 1.11.3',cat:'A-1 LPG',title:'LPG pressure test – 3-minute gauge hold',keywords:'LPG pressure test leak gauge 3 minutes constant propane installation test',text:'The complete LPG system shall be subjected to a pressure test: with the appliance turned off, open the shutoff valve (if installed), and open the cylinder valve, then close the cylinder valve and observe the pressure gauge reading. The pressure indicated shall remain constant for not less than three minutes. If any leakage is indicated by a drop in pressure, the entire LPG system shall be checked with a leak detection fluid to locate the leak.'},
+  /* ── ABYC A-3 Cooking Appliances ── */
+  {code:'ABYC A-3 § 3.5.4',cat:'A-3 Cooking',title:'Cooking appliance controls – minimize burn hazard',keywords:'cooking appliance controls burner heating element injury reach over galley stove',text:'A cooking appliance\'s operating controls shall be located to minimize the possibility of injury from burners or heating elements when being used.'},
+  {code:'ABYC A-3 § 3.5.5',cat:'A-3 Cooking',title:'Cookware retention – 30° heel',keywords:'cookware slide off gimbaled stove 30 degrees heel cooking retention fiddle rails',text:'Means shall be provided to prevent cookware from sliding off the cooking surface when inclined to 30° from the horizontal, in any direction.'},
+  {code:'ABYC A-3 § 3.5.6',cat:'A-3 Cooking',title:'Cooking appliance – secured to prevent displacement',keywords:'cooking appliance secured prevent upset displacement fuel connection strain stove oven',text:'All devices and appliances shall be secured to prevent upset or displacement that will place a strain upon the fuel distribution system and/or the appliance connections.'},
+  {code:'ABYC A-3 § 3.5.7',cat:'A-3 Cooking',title:'Oven door – prevent unintentional opening',keywords:'oven door prevent opening sliding force unintentional latch',text:'Oven doors shall be provided with a means to prevent unintentional opening due to forces from sliding food and/or utensils.'},
+  {code:'ABYC A-3 § 3.5.9.2',cat:'A-3 Cooking',title:'Zone 1 surface temperature – max 150°F rise',keywords:'cooking appliance Zone 1 150 degrees surface temperature combustible material adjacent galley',text:'As installed, the temperature of the surfaces within Zone 1 (within 11.8 in/300 mm of burner center) shall not rise more than 150°F (65°C) above the compartment\'s ambient temperature when the cooking appliance is tested.'},
+  {code:'ABYC A-3 § 3.5.9.4',cat:'A-3 Cooking',title:'Zone 1 materials – flame spread limit / no combustible hangings',keywords:'cooking Zone 1 flame spread material finish combustible adjacent curtains blinds galley',text:'Exposed materials and finishes within Zone 1 shall have a flame spread of not more than 75 min-ft (246 min-m). Free-hanging combustible material such as curtains or blinds shall not be fitted in areas of Zone 1.'},
+  {code:'ABYC A-3 § 3.5.9.6',cat:'A-3 Cooking',title:'Zone 1&2 materials – flame resistant per NFPA 701',keywords:'cooking Zone 2 permanently installed combustible material headliner carpet vinyl flame resistant NFPA 701',text:'Permanently installed combustible materials (e.g., headliner, carpet, vinyl) installed adjacent to the cooking appliance within Zones 1 or 2 shall be flame resistant or treated according to NFPA 701, Standard Methods of Fire Tests for Flame Propagation of Textiles and Films.'},
+  {code:'ABYC A-3 § 3.5.10.1',cat:'A-3 Cooking',title:'Smoke pipe – 9" minimum clearance from combustibles',keywords:'smoke pipe stack clearance combustible materials 9 inches single wall solid fuel',text:'Single wall smoke pipes or stacks shall have a minimum clearance of nine inches (230 mm) from combustible materials, including painted surfaces, or shall be separated from them by fire resistant thermal insulation.'},
+  {code:'ABYC A-3 § 3.7.1',cat:'A-3 Cooking',title:'Gasoline fuel prohibited in liquid fuel cooking appliances',keywords:'gasoline petrol liquid fuel cooking appliance prohibited stove priming',text:'Appliances using gasoline (petrol) in a liquid or solid form for priming or fuel are prohibited.'},
+  {code:'ABYC A-3 § 3.8.2',cat:'A-3 Cooking',title:'Gas appliance – flame failure device required on all burners',keywords:'gas cooking appliance flame failure device burner pilot light LPG propane',text:'All gas fueled cooking appliances shall have a flame failure device on all burners and pilot lights.'},
+  {code:'ABYC A-3 § 3.9.3',cat:'A-3 Cooking',title:'Electric appliance – lid auto-disconnect required',keywords:'electric cooking appliance lid cover automatic disconnect burner heating element',text:'Electric cooking appliances equipped with a lid or cover shall incorporate an automatic power disconnect switch that turns off all surface burners when the lid or cover is lowered over the heating element.'},
+  {code:'ABYC A-3 § 3.9.4',cat:'A-3 Cooking',title:'Electric appliance – indicator light when energized',keywords:'electric cooking appliance indicator light heating element energized on warning',text:'Electric cooking appliances shall have a light indicating when one or more heating elements are energized.'},
+  {code:'ABYC A-3 § 3.10.2',cat:'A-3 Cooking',title:'CO/oxygen warning label required on fuel appliances',keywords:'cooking appliance CO carbon monoxide oxygen label warning fuel burning galley ventilation',text:'A permanent, legible label about the hazards related to fuel burning appliances (i.e., air/oxygen consumption and carbon monoxide production) shall be affixed in a conspicuous manner on, or adjacent to, fuel burning cooking appliances.'},
+  /* ── ABYC A-4 Fire Fighting Equipment ── */
+  {code:'ABYC A-4 § 4.5.4',cat:'A-4 Fire',title:'Engine compartments – fire extinguishing system required',keywords:'engine compartment fire extinguishing system extinguisher required gasoline diesel table',text:'Boats with engine compartments shall have fire extinguishing systems in accordance with Table 1. Gasoline engine boxes above the cockpit sole: portable extinguisher with fire port or fixed system. Compartments below cockpit sole: fixed system required. Diesel engine compartments ≤123.6 cu ft and ≤161 HP: portable or fixed. Over those thresholds: fixed system required.'},
+  {code:'ABYC A-4 § 4.5.4.1',cat:'A-4 Fire',title:'Fire port – discharge into engine compartment without opening',keywords:'fire port discharge engine compartment without opening clean agent dry chemical inboard',text:'Where an inboard engine is protected by a portable fire extinguisher intended for use in a fire port, the fire port shall allow proper discharge without opening the primary access. Dry chemical portable extinguishers shall not be used for this application.'},
+  {code:'ABYC A-4 § 4.5.8',cat:'A-4 Fire',title:'Extinguisher placement – maximum travel distance 33 ft',keywords:'fire extinguisher location accessible adjacent exit path 33 feet one-half length boat',text:'Portable fire extinguishers shall be conspicuously installed adjacent to exit paths. It shall not be necessary to travel more than one-half the length of the boat or 33 ft (10 m), whichever is less, to reach an extinguisher.'},
+  {code:'ABYC A-4 § 4.5.9',cat:'A-4 Fire',title:'Fire extinguishers – readily accessible',keywords:'fire extinguisher readily accessible reach emergency without tools',text:'All portable fire extinguishers and their designated locations shall be readily accessible.'},
+  {code:'ABYC A-4 § 4.5.10',cat:'A-4 Fire',title:'Enclosed locker with extinguisher – symbol required',keywords:'fire extinguisher locker enclosed space symbol identifying location access point',text:'A locker or other enclosed space containing a portable fire extinguisher shall have a symbol identifying the location of the fire extinguisher at the access point.'},
+  {code:'ABYC A-4 § 4.6.1',cat:'A-4 Fire',title:'Fire detection – required in multi-habitable space vessels',keywords:'fire detection smoke detector heat detector habitable space audible alarm multiple spaces',text:'A fire detection device to alert boat occupants to the outbreak of fire shall be installed in boats with more than one habitable space. Fire detection devices and systems shall have an audible alarm.'},
+  {code:'ABYC A-4 § 4.7.2',cat:'A-4 Fire',title:'Portable extinguishers – NFPA 10 / max 12-year service life',keywords:'portable fire extinguisher NFPA 10 nonrechargeable 12 years service date manufacture',text:'Portable extinguishers shall comply with NFPA 10, Portable Fire Extinguishers. Nonrechargeable fire extinguishers should be removed from service at a maximum interval of 12 years from the date of manufacture.'},
+  {code:'ABYC A-4 § 4.8.2',cat:'A-4 Fire',title:'Fixed system – automatic and manual operation required',keywords:'fixed fire extinguishing system automatic manual operation required engine compartment',text:'Fixed fire extinguishing systems shall be capable of both automatic and manual operation. A manual release device shall be readily accessible and operable, and a means of preventing accidental discharge shall be provided.'},
+  {code:'ABYC A-4 § 4.8.2.1',cat:'A-4 Fire',title:'Fixed system – manual release accessible and labeled',keywords:'fixed fire system manual release accessible operable label discharge instructions accidental discharge',text:'A manual release device shall be readily accessible and operable using a maximum force of 22.48 lb (100 N). A label showing how to discharge the system shall be provided adjacent to the release device with the protected spaces identified.'},
+  {code:'ABYC A-4 § 4.8.8.2',cat:'A-4 Fire',title:'Fixed system – discharge indicator at helm',keywords:'fixed fire system discharge indicator visible helm location automatic remote',text:'A system discharge indicator shall be provided, readily visible from outside the protected space and, for automatic systems, located at the primary helm location.'},
+  {code:'ABYC A-4 – Table 2',cat:'A-4 Fire',title:'Portable extinguisher quantity by vessel length (≤65 ft)',keywords:'fire extinguisher number quantity required boat length table 16 26 40 65 feet 5-B ABC',text:'Boats <16 ft: 1 extinguisher (steering). Boats ≥16–<26 ft: 2 extinguishers (steering + galley/cockpit). Boats 26–<40 ft: 3 extinguishers (engine compartment, steering, galley). Boats ≥40–≤65 ft: 4 extinguishers. Minimum rating: 5-B USCG type, ABC per ANSI/UL 711. All located adjacent to exit paths.'},
+  /* ── ABYC A-6 Refrigeration and Air Conditioning ── */
+  {code:'ABYC A-6 § 6.5.3',cat:'A-6 Refrig/AC',title:'Rotating parts – guarded/shrouded',keywords:'refrigeration air conditioning fan blower belt rotating parts guarded shrouded covered AC',text:'As installed, rotating or reciprocating devices such as fans, blowers, flywheels, and belts shall be shrouded, covered, caged, or otherwise protected from contact by a test probe measuring one half inch (13 mm) diameter by six inches (153 mm) long.'},
+  {code:'ABYC A-6 § 6.5.5',cat:'A-6 Refrig/AC',title:'High voltage components – protected from accidental contact',keywords:'refrigeration air conditioning 50 VDC VAC accidental contact protection cover enclosure',text:'Electrical controls and connections carrying a potential exceeding 50 VDC or VAC shall be protected from accidental contact by personnel by means such as covers, enclosures, or encapsulation.'},
+  {code:'ABYC A-6 § 6.5.8',cat:'A-6 Refrig/AC',title:'Refrigerant piping – clamped every 48 inches',keywords:'refrigerant piping secured clamp 48 inches 1.22m support boat structure vibration AC fridge',text:'Refrigerant piping shall be secured by clamps to the boat structure at least every 48 in (1.22 m).'},
+  {code:'ABYC A-6 § 6.5.12',cat:'A-6 Refrig/AC',title:'Condensate drain – not near exhaust or in engine compartment',keywords:'condensate drain evaporator engine compartment exhaust 3 feet discharge location AC',text:'Condensate drains from evaporator systems shall not terminate within three feet (915 mm) of the outlet of engine exhaust systems on the exterior of the hull, or in a compartment housing an engine.'},
+  {code:'ABYC A-6 § 6.5.13',cat:'A-6 Refrig/AC',title:'Condensate drain trap required',keywords:'condensate drain trap evaporator AC refrigeration required installed',text:'A trap in the condensate drain lines shall be installed.'},
+  {code:'ABYC A-6 § 6.5.14',cat:'A-6 Refrig/AC',title:'Air handling – airtight from engine compartments',keywords:'air handling system engine compartment habitable space airtight carbon monoxide CO partition duct',text:'Air handling systems shall be so constructed and installed as to prevent harmful gases from entering habitable spaces, and shall be airtight with respect to compartments containing engines or fossil fueled devices where the air handling system shares common partitions with or passes through those compartments.'},
+  {code:'ABYC A-6 § 6.5.15',cat:'A-6 Refrig/AC',title:'AC serving engine compartments – not to habitable spaces',keywords:'air conditioning engine compartment habitable space communicate return air CO carbon monoxide',text:'Air conditioning systems that serve engine compartments shall not communicate with habitable spaces.'},
+  {code:'ABYC A-6 § 6.5.19',cat:'A-6 Refrig/AC',title:'Potable water – not connected to ethylene glycol chiller',keywords:'potable water chiller ethylene glycol antifreeze toxic connection prohibited AC refrigeration',text:'The potable water system of a boat shall not be connected with water chiller systems using ethylene glycol or other toxic antifreeze solutions.'},
+  {code:'ABYC A-6 § 6.7.5.1',cat:'A-6 Refrig/AC',title:'AC bulkhead/deck penetrations – CO migration prevention',keywords:'air conditioning bulkhead deck penetration carbon monoxide CO machinery space habitable ABYC H-2',text:'To minimize the potential for migration of carbon monoxide from machinery spaces containing engines to adjacent habitable space, bulkhead and deck penetrations shall be in accordance with the requirements of ABYC H-2, Ventilation of Boats Using Gasoline.'},
+  {code:'ABYC A-6 § 6.7.6.1',cat:'A-6 Refrig/AC',title:'Raw water supply – seacock required (H-27)',keywords:'raw water AC refrigeration seacock through hull H-27 supply cooling intake',text:'The raw water supply shall be equipped with a seacock according to the requirements of ABYC H-27, Seacocks, Thru-Hull Fittings, and Drain Plugs.'},
+  {code:'ABYC A-6 § 6.7.6.2',cat:'A-6 Refrig/AC',title:'AC overboard discharge – self-draining within 6" of hull',keywords:'AC refrigeration discharge overboard self-draining 6 inches waterline freeze rupture',text:'Overboard discharge lines above the waterline shall be self-draining within six inches (153 mm) of the hull to reduce the possibility of line rupture due to freezing.'},
+  {code:'ABYC A-6 § 6.8.2',cat:'A-6 Refrig/AC',title:'Refrigerant type labeled on unit',keywords:'refrigerant type label R-134a R-410a labeled conspicuous identification marking',text:'Refrigerant type shall be clearly labeled on the unit in a conspicuous location. The designator shall be included on this label (e.g., R-134a).'},
+  {code:'ABYC A-6 § 6.9.2',cat:'A-6 Refrig/AC',title:'Ignition protection label – 33 CFR 183.410 compliance marked',keywords:'ignition protection label 33 CFR 183.410 air conditioning refrigeration gasoline petrol boat',text:'An assembly containing electrical components shall be marked with a label that includes information indicating whether or not it complies with the ignition protection requirements of Title 33 CFR, 183.410.'},
+  /* ── ABYC A-7 Liquid and Solid Fueled Heating Systems ── */
+  {code:'ABYC A-7 § 7.5.2',cat:'A-7 Heating',title:'Gasoline fuel prohibited in heating appliances',keywords:'heating appliance gasoline petrol fuel prohibited priming liquid',text:'Heating units using gasoline (petrol), in any form, as fuel or for priming, are prohibited.'},
+  {code:'ABYC A-7 § 7.5.4.2',cat:'A-7 Heating',title:'Heating unit exterior surface – max 180°F at 77°F ambient',keywords:'heating unit exterior surface temperature 180 degrees enclosure jacket accommodation',text:'The outside, external surface temperature of the enclosure(s) or jacket(s) shall not exceed 180°F (82°C) with an ambient temperature of 77°F (25°C) when the unit is operating at maximum heat output.'},
+  {code:'ABYC A-7 § 7.5.5',cat:'A-7 Heating',title:'Heating burner – operable at 30° heel',keywords:'heating burner system 30 degrees heel horizontal fire hazard continuous operation',text:'Burner systems shall be capable of normal operation without creating a fire hazard when inclined at angles up to 30° from horizontal, in any direction, and continuous operation at angles of heel up to 30°.'},
+  {code:'ABYC A-7 § 7.5.6',cat:'A-7 Heating',title:'Gasoline boats – room-sealed combustion heating required',keywords:'heating gasoline petrol boat room sealed combustion system accommodation space',text:'On boats with gasoline (petrol) engines, heating units or systems used for accommodation space heating shall be of the room sealed combustion system type.'},
+  {code:'ABYC A-7 § 7.5.12',cat:'A-7 Heating',title:'Non-room-sealed heating – CO detector required',keywords:'heating non room sealed combustion carbon monoxide CO detector A-24 required',text:'On boats with non-room sealed combustion heating systems, a carbon monoxide detection system shall be installed in accordance with the requirements of ABYC A-24, Installation of Carbon Monoxide Detectors and Alarms.'},
+  {code:'ABYC A-7 § 7.6.1',cat:'A-7 Heating',title:'Heating exhaust – ducted to exterior with cap',keywords:'heating exhaust flue smoke pipe stack exterior boat cap water backdraft',text:'Exhaust products shall be ducted to the exterior of the boat with a smoke pipe or stack, and cap designed to minimize water entry and backdraft into accommodation spaces.'},
+  {code:'ABYC A-7 § 7.6.3',cat:'A-7 Heating',title:'Flue terminus – 20" from fuel fitting or tank vent',keywords:'heating flue terminus 20 inches refueling fitting fuel tank vent clearance',text:'The flue system terminus shall not be positioned within 20 in (508 mm) of a refueling fitting or fuel tank vent, and shall be positioned to minimize exhaust re-entry into the boat through any openings into the accommodation spaces.'},
+  {code:'ABYC A-7 § 7.7.3',cat:'A-7 Heating',title:'Liquid fuel heating – fuel lines comply with H-33',keywords:'liquid fuel heating fuel lines connections filters H-33 diesel compliance',text:'Fuel lines, connections, and fuel filters, if used, shall comply with ABYC H-33, Diesel Fuel Systems.'},
+  {code:'ABYC A-7 § 7.7.4',cat:'A-7 Heating',title:'Liquid fuel heating – shutoff valve at tank outlet',keywords:'liquid fuel heating shutoff valve tank outlet accessible manual solenoid',text:'A readily accessible manual or electrically operated (e.g., solenoid) shutoff valve shall be installed at the tank outlet.'},
+  /* ── ABYC A-14 Gasoline and Propane Gas Detection Systems ── */
+  {code:'ABYC A-14 § 14.5.1',cat:'A-14 Gas Det.',title:'Gas detector – continuous operation required',keywords:'gas detector continuous operation gasoline propane LPG detection system',text:'Detectors shall be designed for continuous operation.'},
+  {code:'ABYC A-14 § 14.7.1.1',cat:'A-14 Gas Det.',title:'Gas detector – must detect below 20% LEL',keywords:'gas detector 20 percent lower explosive limit LEL gasoline propane vapor detection',text:'The detector shall be capable of detecting vapors of gasoline and propane below 20% of the lower explosive limit.'},
+  {code:'ABYC A-14 § 14.7.1.2',cat:'A-14 Gas Det.',title:'Gas detector – audible and visible alarm required',keywords:'gas detector audible visible alarm warning gasoline propane LPG detection',text:'The gas detector shall give warning by both audible and visible means.'},
+  {code:'ABYC A-14 § 14.8.1.2',cat:'A-14 Gas Det.',title:'Gasoline vapor sensor location – low in bilge',keywords:'gasoline vapor sensor location bilge low as possible starter motor fuel tank compartment',text:'Sensors installed to detect gasoline vapor shall be located as low in the bilge as possible without becoming submerged or subjected to bilge splash. One or more sensing elements shall be located no higher than the height of the starter motor and in the lowest part of the fuel tank compartment(s) where flammable vapors are likely to collect.'},
+  {code:'ABYC A-14 § 14.8.1.3',cat:'A-14 Gas Det.',title:'LPG/propane sensor – located where vapors collect',keywords:'LPG propane sensor location low near appliance vapors collect dry',text:'Sensors installed to detect LPG gas shall be located where vapors are likely to collect (i.e., as low and as near the appliance as possible) where the sensor can be kept dry and will not be subjected to physical damage.'},
+  {code:'ABYC A-14 § 14.8.1.4',cat:'A-14 Gas Det.',title:'Gas detector alarm – visible and audible at helm/galley',keywords:'gas detector alarm visible audible helm gasoline propane LPG galley location',text:'A visible warning shall appear, and an audible indication shall be readily heard: at the helm position for detectors installed to detect gasoline vapors, and in the galley for detectors installed to detect propane vapors.'},
+  /* ── ABYC A-24 Installation of CO Detectors and Alarms ── */
+  {code:'ABYC A-24 § 24.6.1',cat:'A-24 CO Det.',title:'CO detector required – enclosed accommodation compartment',keywords:'carbon monoxide CO detector required enclosed accommodation compartment sleeping galley head',text:'Carbon monoxide detectors shall be installed on all boats with an enclosed accommodation compartment (one contiguous space containing designated sleeping accommodations, a galley area with sink, and a head compartment).'},
+  {code:'ABYC A-24 § 24.6.2',cat:'A-24 CO Det.',title:'CO detector – monitor contiguous cabin and separate sleeping spaces',keywords:'carbon monoxide CO detector location contiguous cabin sleeping space bulkhead door partition',text:'A carbon monoxide detector shall be located to monitor the atmosphere in a contiguous cabin space and additionally in each sleeping space separated by solid bulkheads/structure and permanent doors/partitions.'},
+  {code:'ABYC A-24 § 24.6.3',cat:'A-24 CO Det.',title:'CO detector mounting – avoid damage, dilution, poor circulation',keywords:'CO detector mount location physical damage rain water sunlight dilution hatch vent corner air circulation',text:'The carbon monoxide detector shall be mounted and located to avoid areas subject to: physical damage including harm from rain, water, or sunlight; dilution of sampled air (e.g., near hatches, ports, or forced ventilation openings); and inadequate natural air circulation (e.g., in corners).'},
+  {code:'ABYC A-24 § 24.8.1',cat:'A-24 CO Det.',title:'CO detector – must display "Marine CO Alarm" and replace-by date',keywords:'CO detector marking marine carbon monoxide alarm replace by date independent laboratory label',text:'The following information shall be clearly visible on the carbon monoxide detector as installed: name of independent laboratory; "Marine Carbon Monoxide Alarm" or equivalent; and replace-by date or equivalent.'},
+  /* ── ABYC A-26 LPG and CNG Fueled Appliances ── */
+  {code:'ABYC A-26 § 26.5.1',cat:'A-26 LPG/CNG App.',title:'LPG/CNG appliances – not in engine fuel compartments',keywords:'LPG CNG appliance engine compartment fuel tank fittings prohibited installation',text:'LPG and CNG fueled appliances shall not be installed in spaces containing internal combustion engines, their fuel tanks, or joints and fittings of their fuel systems.'},
+  {code:'ABYC A-26 § 26.5.7',cat:'A-26 LPG/CNG App.',title:'LPG/CNG appliance controls – push-turn two-step operation',keywords:'LPG CNG appliance controls push turn two step off on burner safety',text:'Appliance controls shall be designed to require a push-turn or other two-phase operation when going from "off" to "on" position.'},
+  {code:'ABYC A-26 § 26.5.10',cat:'A-26 LPG/CNG App.',title:'Unattended LPG/CNG appliances – room-sealed combustion required',keywords:'unattended appliance LPG CNG room sealed combustion heater water heater refrigerator',text:'Unattended appliances shall incorporate a room-sealed combustion system.'},
+  {code:'ABYC A-26 § 26.5.11',cat:'A-26 LPG/CNG App.',title:'Attended non-room-sealed appliances – oxygen depletion sensor required',keywords:'attended appliance non room sealed oxygen depletion sensor 95 percent fuel supply cutoff LPG',text:'Attended non-room-sealed combustion system appliances shall be equipped with an oxygen depletion sensor that cuts off the fuel supply to the appliance when the room oxygen level falls below 95% of normal, or failure of the oxygen depletion sensor occurs.'},
+  {code:'ABYC A-26 § 26.5.12',cat:'A-26 LPG/CNG App.',title:'LPG/CNG appliances – flame failure device on all burners',keywords:'LPG CNG appliance flame failure device burner pilot light gas flow prevent',text:'All appliances shall have flame failure devices on all burners and pilot lights that will prevent gas from flowing to the burner if the flame is not present.'},
+  {code:'ABYC A-26 § 26.5.13',cat:'A-26 LPG/CNG App.',title:'LPG/CNG appliance exterior – max 180°F surface temperature',keywords:'LPG CNG appliance exterior surface temperature 180 degrees 150 degrees combustible surroundings',text:'When operating at rated capacity, the exterior surfaces of the appliance shall not exceed 180°F (82°C) when tested at an ambient temperature of 77°F (25°C), and the temperature of the surface below and immediately surrounding vertical combustible surfaces shall not rise more than 150°F (66°C) above the compartment\'s ambient temperature.'},
+  {code:'ABYC A-26 § 26.6.2',cat:'A-26 LPG/CNG App.',title:'Room-sealed flue – terminus 20" from fuel fitting, no dampers',keywords:'room sealed combustion flue terminus 20 inches fuel tank vent damper prohibited inspection',text:'Flues shall be routed to ensure complete discharge outside the boat of combustion products. The flue system shall be continuous and sealed from the appliance to its terminus outside the boat. Flue terminus shall not be positioned within 20 in (508 mm) of a refueling fitting or fuel tank vent. Dampers shall not be installed in flue systems. The flue system shall be accessible for inspection.'},
+  /* ── ABYC E-10 Storage Batteries ── */
+  {code:'ABYC E-10 § 10.7.4',cat:'E-10 Batteries',title:'Battery restraint – max 1" movement under 2x weight force',keywords:'battery restraint movement one inch twice weight force shifting chocking strapping vertical horizontal',text:'Batteries, as installed, shall be restrained to not move more than one inch (25 mm) in any direction when a pulling force of twice the battery weight is applied through the center of gravity of the battery vertically (1 min), horizontally fore and aft (1 min each), and horizontally athwartships (1 min each).'},
+  {code:'ABYC E-10 § 10.7.5',cat:'E-10 Batteries',title:'Battery – not directly above/below fuel tank or fitting',keywords:'battery fuel tank filter fitting above below installation location clearance intervening sole floor deck',text:'Batteries shall not be installed directly above or below a fuel tank, fuel filter, or fitting in a fuel line without an intervening sole, floor, or deck.'},
+  {code:'ABYC E-10 § 10.7.6',cat:'E-10 Batteries',title:'Fuel lines within 12" of battery – dielectric shielding required',keywords:'battery fuel line 12 inches dielectric shield short circuit accidental metallic',text:'Each metallic fuel line and fuel system component within 12 in (305 mm) of the horizontal or vertical plane of the battery surface containing the terminals shall be shielded with a dielectric material to protect against accidental short-circuiting.'},
+  {code:'ABYC E-10 § 10.7.8',cat:'E-10 Batteries',title:'Ungrounded battery terminal – protected from accidental contact',keywords:'battery ungrounded terminal non-conductive boot shield box accidental contact positive metallic',text:'To prevent accidental contact of the ungrounded battery connection to ground, each battery shall be protected so that metallic objects cannot come into contact with the ungrounded battery terminal and uninsulated cell straps. This may be accomplished by: covering the ungrounded terminal with a non-conductive boot or shield; installing the battery in a non-conductive covered battery box; or installing in a non-conductive compartment designed only for the battery.'},
+  {code:'ABYC E-10 § 10.7.9',cat:'E-10 Batteries',title:'Battery – hydrogen gas venting required',keywords:'battery hydrogen gas vent discharge boat vent system lead acid AGM gel sealed',text:'A vent system or other means shall be provided to permit the discharge from the boat of hydrogen gas released by the battery. This applies to all battery types whether removable vent caps, sealed, maintenance free, or pressure regulated valve vent systems with immobilized electrolyte (gel and AGM batteries).'},
+  {code:'ABYC E-10 § 10.8.3',cat:'E-10 Batteries',title:'Battery cables 6 AWG and larger – no wing nuts',keywords:'battery cable conductor 6 AWG wing nuts prohibited large size connection terminal',text:'Battery cables and other conductors size 6 AWG (13.3 mm²) and larger shall not be connected to the battery with wing nuts.'},
+  {code:'ABYC E-10 § 10.8.4.1',cat:'E-10 Batteries',title:'Battery terminal – maximum 4 conductors per terminal',keywords:'battery terminal stud post maximum four conductors connections multiple wires',text:'A maximum of four conductor terminals shall be installed on a single battery terminal (e.g., stud, post).'},
+  /* ── 33 CFR Navigation and Safety ── */
+  {code:'33 CFR 183.420',cat:'33 CFR',title:'Battery installation requirements – federal',keywords:'battery installation federal CFR 33 183 acid resistant restrained vent location',text:'Batteries shall be secured against displacement, installed in a location that minimizes risk of short circuit, equipped with acid-resistant containers, and provided with ventilation for hydrogen gas. Each ungrounded terminal shall be protected against accidental contact.'},
+  {code:'33 CFR 183.410',cat:'33 CFR',title:'Ignition protection – required in gasoline spaces',keywords:'ignition protection gasoline engine space electrical components CFR 33 183 spark',text:'All electrical components located in spaces containing gasoline engines, fuel tanks, or other sources of gasoline vapors must be ignition protected to prevent spark-induced ignition of flammable vapors.'},
+  {code:'33 CFR 183.514',cat:'33 CFR',title:'Fuel tank – must be secured against displacement',keywords:'fuel tank secured displacement restrained CFR 33 183 attachment mounting',text:'Fuel tanks shall be secured to prevent displacement by the forces to which they may be subjected in normal use and in a capsize.'},
+  {code:'33 CFR 183.552',cat:'33 CFR',title:'Fuel tank – no plastic or rubber fittings below waterline level',keywords:'fuel tank fitting plastic rubber below top of tank prohibited federal CFR',text:'Fittings that penetrate a fuel tank below the level of fuel in the tank shall not be made of plastic or rubber. Fuel tanks shall have no openings or connections below the normal fuel level other than those required for operation.'},
+  {code:'33 CFR 183.558',cat:'33 CFR',title:'Fuel hose – USCG A-1 required below deck',keywords:'fuel hose USCG A-1 A-2 below deck gasoline diesel type marked federal CFR 183',text:'Fuel hose used below the weather deck shall be marked A-1 when subject to fuel immersion, and A-2 in all other below-deck locations. All fuel hose shall meet USCG type and marking requirements.'},
+  {code:'33 CFR 183.590',cat:'33 CFR',title:'Fuel system components – 2.5 minute fire resistance',keywords:'fuel system components 2.5 minute fire resistance free burning fuel gasoline CFR 183',text:'Fuel system components, including flexible fuel lines, shall be capable of withstanding a 2.5 minute exposure to free burning fuel without failure.'},
+  {code:'33 CFR 183.610',cat:'33 CFR',title:'Through-hull fittings below waterline – seacock or valve required',keywords:'seacock through hull below waterline valve required federal CFR 33 183 shutoff flooding',text:'Each through-hull fitting below the waterline shall be equipped with a seacock or valve that can be closed to stop flooding in the event of hose failure.'},
+  {code:'33 CFR 175.10',cat:'33 CFR',title:'PFD requirements – number and type by vessel size',keywords:'PFD life jacket personal flotation device type USCG approved required federal CFR 33',text:'Every vessel must carry a Coast Guard-approved PFD of the proper size for each person on board. Vessels 16 feet and longer must also carry at least one throwable Type IV device. PFDs must be in serviceable condition and readily accessible.'},
+  {code:'33 CFR 175.15',cat:'33 CFR',title:'Fire extinguisher requirements by vessel length',keywords:'fire extinguisher required USCG federal CFR 33 B-I B-II portable vessel length',text:'Motor vessels less than 26 feet with enclosed engine compartments shall carry at least one USCG approved Type B-I fire extinguisher. Vessels 26–40 feet: at least two B-I or one B-II. Vessels 40–65 feet: at least three B-I or one B-I and one B-II.'},
+  {code:'33 CFR 175.25',cat:'33 CFR',title:'Visual distress signals – required on coastal waters',keywords:'flare visual distress signal VDS expiration date required coastal waters CFR 33',text:'Vessels used on coastal waters, Great Lakes, territorial seas, and connecting or tributary waters must carry USCG-approved visual distress signals. Signals must be unexpired and in serviceable condition.'},
+  {code:'33 CFR 175.40',cat:'33 CFR',title:'Navigation lights – required from sunset to sunrise',keywords:'navigation lights running lights required sunset sunrise visibility federal CFR 33',text:'All vessels must display navigation lights from sunset to sunrise and during periods of restricted visibility. Lights must meet the applicable COLREGS or Inland Rules requirements for the vessel type and size.'},
+  {code:'ABYC E-11.4.1',cat:'E-11',title:'Overcurrent protection within 72"',keywords:'battery overcurrent fuse breaker 72 inch',text:'Each ungrounded current-carrying conductor shall be protected by an overcurrent protective device as close to its source of power as practicable, but within 72 inches (1.8m) of the source.'},
+  {code:'ABYC E-11.5.2.8',cat:'E-11',title:'Non-conductive boots on ungrounded terminals',keywords:'boot ungrounded terminal accidental contact protection',text:'Continuously energized parts, such as positive battery terminals and both ends of all wires connected thereto, shall be physically protected to prevent accidental short circuits. Protection shall cover all energized surfaces (e.g., boots).'},
+  {code:'ABYC E-11.7.1.1',cat:'E-11',title:'Battery installation – restraint',keywords:'battery secure shifting restraint chocking strapping',text:'Batteries, as installed, shall be restrained to not move more than one inch (25 mm) in any direction when a pulling force of twice the battery weight is applied through the center of gravity of the battery.'},
+  {code:'ABYC E-11.7.1.3',cat:'E-11',title:'Battery in acid-resistant container',keywords:'battery acid electrolyte container bin tray',text:'Each battery shall be installed in a battery box or in a space that is constructed so it contains any spilled electrolyte and is resistant to damage from the electrolyte.'},
+  {code:'ABYC E-11.14.4.1.9',cat:'E-11',title:'Wiring support interval – 18"',keywords:'wiring securing support 18 inch schedule chafing secured',text:'Conductors shall be supported throughout their length or shall be secured at least every 18 inches (455 mm). Conductors shall also be secured within 12 inches (305 mm) of each end fitting.'},
+  {code:'ABYC E-11.14.5',cat:'E-11',title:'Wire labeling',keywords:'wire label identification unlabeled wiring',text:'Each conductor shall be identified at each end and at least every 12 inches throughout its length, unless the conductor is clearly identifiable by color coding or routing.'},
+  {code:'ABYC E-10.7.4',cat:'E-11',title:'Battery restraint – shifting force',keywords:'battery chocking shifting two times weight force',text:'Batteries, as installed, shall be restrained to not move more than one inch (25 mm) in any direction when a pulling force of twice the battery weight is applied through the center of gravity of the battery in any direction.'},
+  {code:'ABYC E-11.11.1.3',cat:'E-11',title:'Case ground – metallic appliances',keywords:'case ground hot water heater metallic appliance',text:'All electrical appliances with metallic cases or frames that are not inherently grounded through the mounting shall have a separate ground conductor connecting the case to the DC negative grounding system.'},
+  /* ABYC H-22 Bilge */
+  {code:'ABYC H-22.7.3',cat:'H-22',title:'High water alarm required',keywords:'high water alarm bilge enclosed accommodation',text:'On boats with an enclosed accommodation compartment, an audible alarm shall be installed indicating that bilge water is approaching the maximum bilge water level.'},
+  {code:'ABYC H-22.3',cat:'H-22',title:'Bilge pump capacity',keywords:'bilge pump capacity GPH automatic float switch',text:'Boats with enclosed accommodation compartments shall be equipped with at least one power-driven bilge pump having a capacity of at least 1000 GPH coupled to an automatic activation switch.'},
+  /* ABYC H-24 Gasoline */
+  {code:'ABYC H-24.8.1',cat:'H-24',title:'Fuel hose type – A-1 required below deck',keywords:'fuel hose A-1 A-2 below deck gasoline type',text:'A Type A fuel hose shall be used where fuel hose is installed below the weather deck and is subject to pressure, fuel submersion, or vapor exposure.'},
+  {code:'ABYC H-24.9.4',cat:'H-24',title:'Anti-siphon protection',keywords:'anti-siphon valve fuel tank pickup tube gasoline',text:'Fuel systems shall include provisions to prevent fuel siphoning when the fuel delivery hose is below the level of fuel in the tank.'},
+  {code:'ABYC H-24.11.1',cat:'H-24',title:'Fuel tank bonding',keywords:'fuel tank bonding aluminum gasoline',text:'Metal fuel tanks, fuel fills, and metallic fuel system components shall be bonded together and connected to the common DC negative ground.'},
+  {code:'ABYC H-24.12.3',cat:'H-24',title:'Fuel fill hose – double clamped',keywords:'fuel fill hose double clamp stainless',text:'Fuel fill and vent hoses and connections shall be of A-2 type, secured with two stainless steel clamps at each connection.'},
+  /* ABYC H-33 Diesel */
+  {code:'ABYC H-33.8.1',cat:'H-33',title:'Diesel fuel hose – type A required below deck',keywords:'diesel fuel hose A-1 A-2 below deck type',text:'A Type A fuel hose shall be used where fuel hose is installed below the weather deck and is subject to pressure, fuel submersion, or vapor exposure.'},
+  {code:'ABYC H-33.9.4',cat:'H-33',title:'Diesel anti-siphon valve',keywords:'anti-siphon diesel fuel shutoff valve tank',text:'Fuel systems shall include provisions to prevent fuel siphoning. Fuel shutoff valves shall be accessible and operable from the accommodation spaces.'},
+  {code:'ABYC H-33.11.1',cat:'H-33',title:'Diesel tank bonding',keywords:'diesel fuel tank bonding aluminum metal',text:'Metal fuel tanks, fuel fills, and metallic fuel system components shall be bonded together and connected to the DC grounding system.'},
+  /* ABYC P-1 Exhaust */
+  {code:'ABYC P-1.7.2.1',cat:'P-1',title:'Exhaust hose – double clamped',keywords:'exhaust hose clamp double clamped single clamp mixing elbow',text:'All hose connections in the exhaust system shall be secured with a minimum of two clamps at each connection. Clamps shall be of a stainless-steel band type with a minimum nominal band width of 1/2 inch.'},
+  {code:'ABYC P-1.8.3',cat:'P-1',title:'Exhaust system – above waterline discharge',keywords:'exhaust discharge waterline wet dry exhaust through hull',text:'The exhaust discharge shall be positioned so that exhaust gases are directed away from the vessel and its occupants and shall be arranged to prevent water from entering the engine through the exhaust system.'},
+  {code:'ABYC P-1.7.3',cat:'P-1',title:'Exhaust hose – wire reinforced wet system',keywords:'exhaust hose wire reinforced wet dry rot age wear',text:'Wet exhaust hose shall be of the wire-reinforced type, resistant to the temperatures encountered in use, resistant to oil and fuel, and rated for marine exhaust service.'},
+  /* NFPA 302 */
+  {code:'NFPA 302 – 7.1.1',cat:'NFPA',title:'Smoke alarm required – vessels 26ft+ with sleeping accommodations',keywords:'smoke detector alarm 26 foot sleeping accommodation NFPA',text:'All vessels 26 feet or more in length with accommodation spaces intended for sleeping shall be equipped with a single station smoke alarm that is listed to UL 217 for recreational vehicles and installed per manufacturer instructions.'},
+  {code:'NFPA 302 – 7.2',cat:'NFPA',title:'CO detector required',keywords:'carbon monoxide CO detector alarm accommodation spaces',text:'Vessels with accommodation spaces containing a gasoline engine, generator, or cooking appliance shall be equipped with carbon monoxide detection equipment listed to UL 2034.'},
+  {code:'NFPA 302 – 12.3',cat:'NFPA',title:'Fire extinguisher – annual inspection',keywords:'fire extinguisher annual inspection portable semi-portable',text:'Portable and semi-portable fire extinguishers should be inspected annually to verify they are fully charged and in serviceable condition. Fixed fire suppression systems should be inspected per manufacturer recommendations.'},
+  /* 33 CFR */
+  {code:'33 CFR 175.10',cat:'33 CFR',title:'PFD requirements',keywords:'PFD life jacket personal flotation device type USCG approved',text:'Every vessel must have a Coast Guard-approved personal flotation device (PFD) of the proper size for each person on board. Vessels 16 feet and longer must also carry one throwable Type IV PFD.'},
+  {code:'33 CFR 175.15',cat:'33 CFR',title:'Fire extinguisher requirements',keywords:'fire extinguisher required USCG Class B portable',text:'Motor vessels less than 26 feet in length with enclosed engine compartments shall carry at least one USCG approved Type B-I fire extinguisher. Vessels 26–40 feet shall carry at least two B-I or one B-II.'},
+  {code:'33 CFR 175.25',cat:'33 CFR',title:'Visual distress signals required',keywords:'flare visual distress signal VDS expiration date',text:'Vessels used on coastal waters, Great Lakes, territorial seas, and on connecting or tributary waters must carry USCG-approved visual distress signals. Signals must be unexpired and in serviceable condition.'},
+  {code:'33 CFR 183.114',cat:'33 CFR',title:'Fuel system – fill pipe and vent',keywords:'fuel fill pipe vent self-draining above waterline',text:'Each fill opening for a gasoline fuel system shall be located above the waterline and shall be fitted with a cap that prevents fuel spillage into the boat and water.'},
+  {code:'33 CFR 183.558',cat:'33 CFR',title:'Fuel hose – grade and type',keywords:'fuel hose USCG A-1 A-2 grade type below deck',text:'Fuel hose used in a fuel system shall be marked A-1 when in a location subject to fuel immersion and A-2 in all other locations below the weather deck.'},
+  {code:'33 CFR 183.610',cat:'33 CFR',title:'Through-hull – below waterline seacock required',keywords:'seacock through hull below waterline shutoff valve fitting',text:'Each through-hull fitting below the waterline shall be equipped with a seacock or valve that can be closed to stop flooding in the event of hose failure.'},
+  /* Bonus general */
+
+  /* ── ABYC A-22 CNG Systems ── */
+  {code:'ABYC A-22 § 22.6.1',cat:'A-22 CNG',title:'Ignition protection required in CNG compartments',keywords:'CNG ignition protection electrical compartment cylinder fittings valves regulators E-11',text:'In a compartment containing CNG appliances, cylinders, fittings, valves, or regulators, all potential electrical sources of ignition shall be ignition protected and marked in accordance with the requirements of ABYC E-11.'},
+  {code:'ABYC A-22 § 22.7.1',cat:'A-22 CNG',title:'No open flame devices in CNG compartments',keywords:'CNG open flame heat producing device 300 degrees compartment prohibited',text:'In a compartment containing CNG appliances, cylinders, fittings, valves, or regulators, there shall be no open flame devices, exhaust pipes, or heat producing devices capable of producing a temperature in excess of 300F (149C).'},
+  {code:'ABYC A-22 § 22.8.2.4',cat:'A-22 CNG',title:'CNG system – pressure gauge required on regulator',keywords:'CNG pressure gauge cylinder side regulator visible leakage test remaining fuel',text:'Each CNG regulating system shall include a pressure gauge reading the cylinder pressure side of the pressure regulator. The gauge monitors remaining fuel and provides a means to test for leakage.'},
+  {code:'ABYC A-22 § 22.8.4.3',cat:'A-22 CNG',title:'CNG cylinders – not installed in engine compartments',keywords:'CNG cylinders not installed engine compartment internal combustion prohibited',text:'CNG cylinders shall not be installed in compartments containing an internal combustion engine.'},
+  {code:'ABYC A-22 § 22.9.5',cat:'A-22 CNG',title:'Copper tubing prohibited for CNG fuel lines',keywords:'CNG copper tubing prohibited fuel line methane corrosive',text:'Copper tubing is prohibited for CNG fuel supply lines. CNG (primarily methane) is corrosive to copper. CNG and LPG supply lines are not interchangeable.'},
+  {code:'ABYC A-22 § 22.10.3.1',cat:'A-22 CNG',title:'CNG pressure test – 3-minute constant gauge hold',keywords:'CNG pressure test leak gauge 3 minutes constant installation test ammonia',text:'With appliance valves off and cylinder valve open then closed, the pressure indicated shall remain constant for not less than three minutes. If pressure drops, check entire system with leak detection fluid. Never use flame. Do not use solutions containing ammonia.'},
+  /* ── ABYC A-23 Sound Signal Appliances ── */
+  {code:'ABYC A-23 § 23.5.1',cat:'A-23 Sound',title:'Vessels 5m–20m – power-operated horn required',keywords:'sound signal appliance horn whistle power operated required 16.5 feet 65 feet vessel',text:'All power driven and sailing vessels from five meters (16.5 ft) to less than 20 m (65 ft) in length shall carry a power operated sound signal appliance that meets the requirements of ABYC A-23.'},
+  {code:'ABYC A-23 § 23.7.10',cat:'A-23 Sound',title:'Exterior horn – salt spray and weathertight resistance required',keywords:'horn whistle exterior salt spray weathertight watertight ASTM B117 IEC 60529',text:'An assembled sound signal appliance designed for outside mounting shall withstand salt spray per ASTM B117 for 200 hr and shall perform after weathertight or watertight testing per IEC 60529.'},
+  {code:'ABYC A-23 § 23.8.5',cat:'A-23 Sound',title:'Horn on vessels >12m – directed forward, not obstructed',keywords:'horn whistle 12 meter 39 feet directed forward sound pressure unobstructed structure gear',text:'For vessels longer than 12 m (39 ft), sound signal appliances shall be mounted with their sound pressure level directed straight ahead and shall not be acoustically obstructed by fixed vessel structure or gear.'},
+  /* ── ABYC E-2 Cathodic Protection ── */
+  {code:'ABYC E-2 § 2.6.1',cat:'E-2 Cathodic',title:'Galvanic isolator – install per A-28 if fitted',keywords:'galvanic isolator shore power grounding conductor A-28 cathodic galvanic corrosion',text:'If installed, galvanic isolators shall be installed in accordance with ABYC A-28. Shore power interconnection via grounding conductor may cause galvanic current flow between the boat and dock, leading to excessive anode loss.'},
+  {code:'ABYC E-2 § 2.7.1',cat:'E-2 Cathodic',title:'Sacrificial anodes – sufficient mass for inspection interval',keywords:'sacrificial anode zinc aluminum magnesium mass surface area cathodic protection annual painted ineffective',text:'The mass and exposed surface area of anodes shall be sufficient to provide continuous cathodic protection for at least the period between inspections (generally annually). Zinc: saltwater. Aluminum: salt/brackish/fresh water. Magnesium: fresh water only. Anodes of any type are ineffective if painted.'},
+  {code:'ABYC E-2 § 2.7.3.1',cat:'E-2 Cathodic',title:'Magnesium anodes – prohibited in saltwater',keywords:'magnesium anode saltwater prohibited overprotection cathodic disbondment aluminum hull',text:'Magnesium sacrificial anodes shall not be used on boats operating in seawater. Their potential (-1600 to -1630 mV) can cause harmful overprotection of aluminum (alkali corrosion, hydrogen blistering/cathodic disbondment of paint).'},
+  {code:'ABYC E-2 § 2.9.2',cat:'E-2 Cathodic',title:'Sterndrive/outboard – aluminum lower units require anode protection',keywords:'sterndrive outboard aluminum lower unit anode cathodic protection saltwater brackish galvanic',text:'Sterndrives, outboards, and other metal components shall be protected with sacrificial anodes mounted on aluminum lower units, or anodes mounted on the hull connected to the cathodic bonding system, or an impressed current system.'},
+  /* ── ABYC H-2 Ventilation of Boats Using Gasoline ── */
+  {code:'ABYC H-2 § 2.5.4.1',cat:'H-2 Ventilation',title:'Powered ventilation required – enclosed gasoline engine compartments',keywords:'blower powered ventilation gasoline engine compartment cranking motor enclosed required',text:'Each compartment not open to the atmosphere that has a permanently installed gasoline engine with a cranking motor shall be ventilated by an exhaust blower system.'},
+  {code:'ABYC H-2 § 2.5.4.2',cat:'H-2 Ventilation',title:'At least one powered blower per gasoline propulsion engine',keywords:'blower powered ventilation gasoline propulsion engine one per engine minimum',text:'A compartment containing permanently installed gasoline engine(s) for propulsion shall have at least one powered blower for each gasoline propulsion engine.'},
+  {code:'ABYC H-2 § 2.6.2.3',cat:'H-2 Ventilation',title:'Bulkhead penetrations – vapor migration to accommodation minimized',keywords:'bulkhead deck penetration gasoline engine accommodation vapor seal flexible compound wiring hose crevice',text:'Openings such as crevices, holes, joints, and penetrations for wiring, cable, and hose in bulkheads or decks between accommodation and gasoline engine compartments shall be constructed to minimize vapor flow from the machinery space (e.g., sealed with flexible compounds).'},
+  {code:'ABYC H-2 § 2.6.3.1.4',cat:'H-2 Ventilation',title:'Bilge blowers – ignition protected required',keywords:'bilge blower ignition protected UL 1128 marine C-1500 SAE J1171 gasoline',text:'Blowers shall meet the external ignition protection requirements of UL 1128 Marine Blowers, ABYC C-1500 Ignition Protection for Marine Products, or SAE J1171 External Ignition Protection of Marine Electrical Devices.'},
+  {code:'ABYC H-2 § 2.6.3.2.1',cat:'H-2 Ventilation',title:'Blower switch – visual indicator required at each switch location',keywords:'blower switch visual indicator power applied voltage ventilation system light',text:'There shall be a visual indicator, other than the switch position, at each blower switch location to indicate that power (voltage) is applied to the powered ventilation system.'},
+  {code:'ABYC H-2 § 2.6.4.4.1',cat:'H-2 Ventilation',title:'Ventilation duct openings – above bilge water, self-draining, lower third',keywords:'ventilation duct intake exhaust opening above bilge water self-draining permanently fixed lower third compartment',text:'Ventilation duct openings shall be permanently secured above the normal accumulation of bilge water, self-draining, and located in the lower one-third of the compartment, as nearly as practicable below the engine(s).'},
+  {code:'ABYC H-2 § 2.6.5.2',cat:'H-2 Ventilation',title:'Vent openings – 15" minimum from fuel fill and tank vents',keywords:'ventilation opening gasoline fuel fill tank vent 15 inches separation exterior',text:'In no instance shall ventilation intakes and exhausts be closer than 15 in (381 mm) from the gasoline fill and tank vent openings.'},
+  /* ── ABYC H-3 Windows, Hatches, Glazing ── */
+  {code:'ABYC H-3 § 3.5.1',cat:'H-3 Windows',title:'Habitable space – unobstructed means of exit required',keywords:'habitable space exit means of escape hatch door unobstructed readily accessible cooking engine',text:'A habitable space shall have a readily accessible and unobstructed means of exit, and a second readily accessible means of exit to open air if the main exit leads through or over an engine space or within 20 inches (500 mm) of the closest cooking appliance heat source.'},
+  {code:'ABYC H-3 § 3.5.2',cat:'H-3 Windows',title:'Escape hatch – minimum 18" diameter or 14.5" min dimension / 47.5" max height',keywords:'escape hatch minimum dimensions 18 inch diameter 14.5 inches 270 square inches habitable 47.5 vertical',text:'Means of exit: minimum 18 in (457 mm) diameter circle, or minimum 14.5 in (368 mm) dimension with 270 in2 (0.174 m2) area. Vertical distance to means of exit shall not exceed 47.5 in (1.2 m).'},
+  {code:'ABYC H-3 § 3.5.3',cat:'H-3 Windows',title:'Hatches and portlights – watertight to interior, secured when closed',keywords:'hatch portlight weatherdeck hull cabin top watertight interior secured closed means',text:'Hatches and portlights on weatherdecks, hull sides, and cabin tops shall be watertight to the boat interior and provided with a means to be secured when closed.'},
+  /* ── ABYC H-4 Cockpit Drainage ── */
+  {code:'ABYC H-4 § 4.5.1',cat:'H-4 Cockpit',title:'All boats – cockpit drainage system required',keywords:'cockpit drainage quick draining self-bailing scupper freeing port required all boats',text:'All boats shall have a drainage system: quick draining cockpit, self-bailing/self-draining cockpit, nondraining cockpit (vessels <20 ft with flotation only), cockpits drained by operator intervention, or assisted bailing.'},
+  {code:'ABYC H-4 § 4.6.4',cat:'H-4 Cockpit',title:'Monohull sailboat closed transom – 8" minimum cockpit sill height',keywords:'cockpit sill height monohull sailboat closed transom 8 inches minimum',text:'The minimum sill height for monohull sailboats with closed transoms shall be eight inches (203 mm).'},
+  {code:'ABYC H-4 § 4.7.1',cat:'H-4 Cockpit',title:'Self-bailing cockpit sole – at least 1" above full load waterline',keywords:'self bailing cockpit sole above waterline one inch scupper drain minimum',text:'For self-bailing cockpits, the lowest point of the cockpit sole shall be at least one inch (25 mm) above the full load waterline.'},
+  /* ── ABYC H-22 additional ── */
+  {code:'ABYC H-22 § 22.8.6',cat:'H-22',title:'Bilge pump discharge – above max heeled waterline or vented loop',keywords:'bilge pump discharge above maximum heeled waterline vented loop siphon seacock H-27',text:'The bilge pump discharge location shall be above the maximum heeled waterline, or if located below the maximum heeled waterline, the discharge line shall comply with ABYC H-27 and include a vented loop or other anti-siphon means. A check valve shall not be used for this purpose.'},
+  {code:'ABYC H-22 § 22.8.12',cat:'H-22',title:'Automatic bilge pump – manual override switch required',keywords:'bilge pump automatic controls manual switch activate readily accessible',text:'Bilge pumps with automatic controls shall be provided with a readily accessible manual switch to activate the pump.'},
+  {code:'ABYC H-22 § 22.8.14',cat:'H-22',title:'Automatic bilge pump – visual indicator at primary helm',keywords:'bilge pump automatic controls visual indication primary helm position activated running',text:'Bilge pumps with automatic controls shall be provided with a visual indication, visible from the primary helm position, that the pump is activated.'},
+  /* ── ABYC H-23 Water Systems ── */
+  {code:'ABYC H-23 § 23.5.1',cat:'H-23 Water',title:'Potable water – totally separated from non-potable, fail-safe',keywords:'potable water separated non-potable contamination fail safe bilge pump system',text:'Water systems shall be designed so that potable water is totally separated or has a fail-safe means to prevent contamination from water used for other purposes. Components provided for the potable system shall not be connectable as bilge or sump pumps.'},
+  {code:'ABYC H-23 § 23.7.5.3',cat:'H-23 Water',title:'Potable water deck fill – permanently marked "WATER"',keywords:'potable water deck fill inlet marked WATER ISO symbol label identification cap',text:'The potable water storage tank inlet shall be permanently marked "WATER" or the ISO graphical symbol. The fill inlet cap shall be equipped with a device to prevent its loss.'},
+  {code:'ABYC H-23 § 23.7.10.2',cat:'H-23 Water',title:'Water heater – safety relief valve and energy cutoff required',keywords:'water heater safety relief valve energy cutoff ANSI pressure temperature 175% 210 degrees',text:'Water heater tanks shall be equipped with safety relief valves and energy cutoff equipment. Maximum pressure relief shall be set at not more than 175% of nominal working pressure. Maximum temperature relief shall be set at not more than 210F (99C).'},
+  {code:'ABYC H-23 § 23.7.10.7',cat:'H-23 Water',title:'Water heater – tempering to 125°F or lower required',keywords:'water heater tempering 125 degrees mixing valve scald protection hot water not user dependent',text:'Water heaters or heated water systems, including engine heated systems, shall have a means of tempering the water to 125F (51C) or lower. The means of tempering shall not be user dependent (e.g., adjusting the faucet).'},
+  {code:'ABYC H-23 § 23.9.1',cat:'H-23 Water',title:'Non-potable water systems – labeled at each access point',keywords:'non-potable water labeled faucet spigot access point identification',text:'Non-potable water systems shall be identified as non-potable at each access point (i.e., faucet, spigot).'},
+  /* ── ABYC H-24 Gasoline Fuel Systems additional ── */
+  {code:'ABYC H-24 § 24.18.1',cat:'H-24',title:'Fuel tank and fill – bonded, resistance <1 ohm to ground',keywords:'metallic fuel tank fill bonded grounded resistance one ohm static electricity grounding',text:'Each metallic fuel tank and metallic component of the fuel fill system that is in contact with fuel shall be grounded so that its resistance to the boat ground is less than one ohm. Grounding wires shall not be clamped between fill pipes and flexible hose.'},
+  {code:'ABYC H-24 § 24.20.7',cat:'H-24',title:'Installed gasoline fuel system – pressure tested at minimum 3 psi',keywords:'fuel system pressure tested 3 psi installed leak test five minutes gasoline no leakage',text:'The installed fuel system of every boat shall be pressure checked to the greater of: three psi (21 kPa), 1.5 times maximum hydrostatic head, or 1.5 times max hydrostatic head plus system relief pressure. No leakage at minimum five minutes after application for systems 50 gal or less.'},
+  /* ── ABYC H-27 Seacocks, Thru-Hulls ── */
+  {code:'ABYC H-27 § 27.5.1',cat:'H-27 Seacocks',title:'Thru-hull fittings below max heeled waterline – seacock required',keywords:'through hull fitting below maximum heeled waterline seacock valve required stop flooding H-27',text:'All thru-hull fittings or hull penetrations with any part of the opening below the maximum heeled waterline when inclined from the static floating position shall be equipped with a seacock to stop the admission of water in the event of failure.'},
+  {code:'ABYC H-27 § 27.6.1',cat:'H-27 Seacocks',title:'Seacock assembly – withstands 500 lb static load',keywords:'seacock assembly installation 500 lb static force 30 seconds thru-hull mounted secured',text:'A seacock assembly, including the thru-hull and tail piece, shall be securely mounted so that the assembly will withstand a 500 lb (227 kg) static force applied for 30 sec to the inboard end without failing to stop ingress of water.'},
+  {code:'ABYC H-27 § 27.6.3',cat:'H-27 Seacocks',title:'Seacocks – readily accessible, lever handle, easy to operate',keywords:'seacock accessible handle easy operate lever oriented marked open closed position',text:'Seacocks shall be readily accessible as installed, and oriented so that their handles are easy to operate. The open/closed position shall be clearly marked.'},
+  {code:'ABYC H-27 § 27.10.2',cat:'H-27 Seacocks',title:'Seacock – lever handle required, operable with tools if handle removed',keywords:'seacock lever handle required operable wrench pliers tools without handle',text:'A seacock shall be provided with a lever type handle. If the handle is removed, it shall be possible to operate the seacock with ordinary tools such as crescent wrenches, pliers, or pipe wrenches.'},
+  {code:'ABYC H-27 § 27.10.4',cat:'H-27 Seacocks',title:'Seacock – position not altered by vibration or shock',keywords:'seacock position open closed vibration shock will not change alter inadvertent',text:'A seacock shall be constructed so that its position (open or closed) will not be altered by vibration or shock.'},
+  /* ── ABYC H-30 Hydraulic Systems ── */
+  {code:'ABYC H-30 § 30.5.3',cat:'H-30 Hydraulic',title:'Hydraulic components and fittings – accessible',keywords:'hydraulic system components fittings service points accessible inspection maintenance',text:'Components, fittings, and service points of a hydraulic system shall be accessible (Exception: continuous lengths of hydraulic line).'},
+  {code:'ABYC H-30 § 30.8.1',cat:'H-30 Hydraulic',title:'Hydraulic lines – supported every 24 inches',keywords:'hydraulic lines supported clamps 24 inches intervals routing clips not cut abrade',text:'Hydraulic lines shall be supported at intervals of no more than 24 in (610 mm). Clips used to support hydraulic lines shall not cut or abrade the hydraulic line.'},
+  {code:'ABYC H-30 § 30.8.4',cat:'H-30 Hydraulic',title:'Hydraulic lines – no joints over exhaust or heat sources',keywords:'hydraulic lines heat sources exhaust manifold joints connections prohibited directly over',text:'Hydraulic lines shall be routed as remotely from heat sources as practicable. There shall be no joints or connections in hydraulic lines directly over exhaust lines or engine manifolds.'},
+  /* ── ABYC H-33 Diesel Fuel Systems additional ── */
+  {code:'ABYC H-33 § 33.17.5',cat:'H-33',title:'Installed diesel fuel system – pressure tested at min 3 psi',keywords:'diesel fuel system pressure tested 3 psi installed leak test five minutes no leakage',text:'After installation, the diesel fuel system of every boat shall be pressure checked to at least three psi (21 kPa), or 1.5 times the maximum hydrostatic head to which it may be subjected in service, whichever is greater. No leakage at minimum five minutes after application for systems 50 gal or less.'},
+  {code:'ABYC H-33 § 33.18.3.3.1',cat:'H-33',title:'Copper alloys – galvanic barrier required from aluminum diesel tanks',keywords:'copper alloy fitting diesel aluminum tank galvanic barrier stainless steel separation compatible',text:'Copper-base alloy components shall be separated from contact with aluminum fuel tanks or fitting plates by means of a galvanic barrier, such as 300 series stainless steel.'},
+  {code:'ABYC H-33 § 33.18.4.8',cat:'H-33',title:'Diesel fuel tank – pressure tested before installation',keywords:'diesel fuel tank pressure test before installation leakage 3 psi minimum manufacturer label',text:'Each diesel fuel tank shall be tested prior to installation to the maximum pressure indicated on the tank label. The fuel tank shall evidence no leakage. The test pressure shall not be less than three psi (21 kPa).'},
+
+  {code:'ABYC A-1',cat:'Other',title:'Navigation lights',keywords:'navigation lights running lights COLREGS required',text:'Navigation lights shall comply with COLREGS as applicable. All navigation lights should be tested for operation and verified as the correct type and placement for the vessel classification and operating area.'},
+  {code:'ABYC H-27',cat:'Other',title:'Seacocks and through-hulls',keywords:'seacock through hull below waterline valve exercised operable',text:'All seacocks and through-hull fittings below the operating waterline shall be operable and capable of being closed rapidly. Seacocks should be exercised periodically to prevent seizing.'},
+];
+
+/* ── Categories for the standards browser ── */
+const STD_CATS=['All','A-1 LPG','A-3 Cooking','A-4 Fire','A-6 Refrig/AC','A-7 Heating','A-14 Gas Det.','A-22 CNG','A-23 Sound','A-24 CO Det.','A-26 LPG/CNG App.','E-2 Cathodic','E-10 Batteries','E-11','H-2 Ventilation','H-3 Windows','H-4 Cockpit','H-22','H-23 Water','H-24','H-27 Seacocks','H-30 Hydraulic','H-33','P-1','NFPA','33 CFR','Other'];
+let activeStdCat='All';
+let stdTargetField=null;
+let stdTargetSection=null;
+
+function openStdModal(secId){
+  stdTargetSection=secId;
+  stdTargetField=document.getElementById('pt-'+secId)||document.getElementById('cr-txt');
+  document.getElementById('std-search').value='';
+  activeStdCat='All';
+  renderStdCats();
+  renderStdResults(STANDARDS);
+  document.getElementById('std-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('std-search').focus(),200);
+}
+function openStdModalCR(){
+  stdTargetSection='cr';
+  stdTargetField=document.getElementById('cr-txt');
+  document.getElementById('std-search').value='';
+  activeStdCat='All';
+  renderStdCats();
+  renderStdResults(STANDARDS);
+  document.getElementById('std-modal').classList.remove('hidden');
+}
+function closeStdModal(){document.getElementById('std-modal').classList.add('hidden');}
+
+function renderStdCats(){
+  const el=document.getElementById('std-cats');
+  el.innerHTML=STD_CATS.map(c=>`<button class="cat-btn${c===activeStdCat?' active':''}" onclick="setStdCat('${c}')">${c}</button>`).join('');
+}
+function setStdCat(c){
+  activeStdCat=c;
+  renderStdCats();
+  filterStds();
+}
+function filterStds(){
+  const q=(document.getElementById('std-search').value||'').toLowerCase();
+  let results=STANDARDS;
+  if(activeStdCat!=='All') results=results.filter(s=>s.cat===activeStdCat);
+  if(q) results=results.filter(s=>(s.code+s.title+s.keywords+s.text+s.cat).toLowerCase().includes(q));
+  renderStdResults(results);
+}
+function renderStdResults(list){
+  const el=document.getElementById('std-results');
+  if(!list.length){el.innerHTML='<div class="no-results">No standards found. Try different keywords.</div>';return;}
+  el.innerHTML=list.map((s,i)=>`
+    <div class="std-item" onclick="insertStd(${STANDARDS.indexOf(s)})">
+      <div class="std-item-inner">
+        <div class="std-code">${s.code}</div>
+        <div class="std-title">${s.title}</div>
+        <div class="std-text">"${s.text.substring(0,120)}${s.text.length>120?'…':''}"</div>
+      </div>
+    </div>`).join('');
+}
+function insertStd(idx){
+  const s=STANDARDS[idx];
+  const citation=`Per ${s.code}: "${s.text}"`;
+  if(stdTargetField){
+    const cur=stdTargetField.value;
+    stdTargetField.value=cur+(cur&&!cur.endsWith(' ')?' ':'')+citation;
+    stdTargetField.focus();
+  }
+  closeStdModal();
+}
+
+/* ── App state ── */
+let S={vesselType:'powerboat',defs:[],sd:{}};
+let recog=null,activeField=null;
+let autoSaveTimer=null;
+
+/* ── localStorage save/restore ── */
+const SAVE_KEY='mms_report_v3';
+
+function saveData(){
+  const payload={
+    S,
+    fields:['survey-type','file-num','survey-date','survey-loc','client-name','vessel-name','hin','year','maker','model','vtype-desc','loa','beam','draft','displ','hull-color','reg','hull-type','inspect-cond','sea-trial','vessel-state','dc-avail','weather','accompanied','scope-notes'].reduce((acc,id)=>{
+      const el=document.getElementById(id);
+      if(el) acc[id]=el.value;
+      return acc;
+    },{})
+  };
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify(payload));showSaveIndicator();}
+  catch(e){alert('Save failed — localStorage may be unavailable.');}
+}
+
+function autoSave(){
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer=setTimeout(saveData,1200);
+}
+
+function showSaveIndicator(){
+  const el=document.getElementById('save-indicator');
+  el.style.display='block';
+  setTimeout(()=>{el.style.display='none';},2000);
+}
+
+function checkRestore(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw) return;
+    const data=JSON.parse(raw);
+    if(data&&(data.S?.defs?.length||Object.keys(data.fields||{}).some(k=>data.fields[k]&&data.fields[k]!==''))){
+      document.getElementById('restore-banner').style.display='flex';
+      window._pendingRestore=data;
+    }
+  }catch(e){}
+}
+
+function restoreData(){
+  const data=window._pendingRestore;
+  if(!data) return;
+  if(data.S) S=data.S;
+  if(data.fields){
+    Object.entries(data.fields).forEach(([id,val])=>{
+      const el=document.getElementById(id);
+      if(el) el.value=val;
+    });
+  }
+  if(S.vesselType) selectType(S.vesselType);
+  updateBadge();
+  dismissRestore();
+}
+
+function dismissRestore(){
+  document.getElementById('restore-banner').style.display='none';
+  window._pendingRestore=null;
+}
+
+/* ── Vessel type ── */
+function selectType(t){
+  S.vesselType=t;
+  ['powerboat','sailboat','commercial','addendum'].forEach(v=>{
+    const el=document.getElementById('vt-'+v);
+    if(el) el.classList.toggle('selected',v===t);
+  });
+  autoSave();
+}
+function updateBadge(){
+  document.getElementById('file-badge').textContent=document.getElementById('file-num').value||'New Report';
+}
+
+/* ── Navigation ── */
+function goTo(n){
+  document.querySelectorAll('.screen').forEach((s,i)=>s.classList.toggle('active',i===n));
+  ['s0','s1','s2','s3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.classList.remove('active','done');
+    if(i<n)el.classList.add('done');
+    else if(i===n)el.classList.add('active');
+  });
+  if(n===2)buildSections();
+  if(n===3)buildOutput();
+  window.scrollTo(0,0);
+  saveData();
+}
+
+/* ── Section definitions with upgraded cues from real narratives ── */
+const SECS_POWER=[
+  {id:'hull',label:'Hull & Deck',
+   abbrev:[['Hull material','hull-mat'],['Framing material','frame-mat'],['Decking material','deck-mat'],
+    ['Bulkheads','bulkheads'],['Hull ventilation','hull-vent'],['Bilge ventilation','bilge-vent'],
+    ['General condition of topsides','topsides-gen'],['General condition of decking','decking-gen'],
+    ['General condition of bottom','bottom-gen'],['General condition of bilges','bilges-gen'],
+    ['Condition of life rails / stanchions','liferails'],['Condition of hatches','hatches'],
+    ['Condition of portlights','portlights'],['Condition of cockpit drains','cdrains'],
+    ['Condition of cleats','cleats'],['Condition of seacocks','seacocks'],['Condition of interior','interior']],
+   narrative:true,
+   cues:['hull construction method','unidirectional / biaxial / mat & roving','polyester / vinylester / epoxy resin','hull sides cored or solid','hull-to-deck joint','bedding compound','mechanically fastened','rub rail condition','prior impacts to rub rail','topsides visual appearance','post-curing','hard spots at bulkheads','percussion sounding topsides','delamination','prior repairs','cosmetic scuffs','dimpling','nameplate adhesion','transom sounding','transom core condition','above-waterline through-hulls','marelon / stainless / silicon bronze','backflow arresting flap','tank vent mesh screens','cockpit drain hoses','hose clamp condition','deck construction / core','foam core / plywood core','non-skid condition','gelcoat crazing','production voids','conductivity readings','deck hardware secured','T-top bases','access hatch gaskets','hull interior inspection','stringer condition','bulkhead tabbing','athwartships members','limber holes','bilge condition / mold','interior soft goods','water intrusion evidence','winter cover limitations']},
+
+  {id:'bottom',label:'Bottom',
+   abbrev:[['Corrosion protection','corr-prot'],['Anode locations','anode-loc'],['Anode condition','anode-cond'],
+    ['Through-hull fittings','thru-hulls'],['Seacock material','seacock-mat'],['Seacock condition','seacock-cond'],
+    ['Bottom paint type','btm-paint'],['Propeller condition','prop-cond'],['Shaft condition','shaft-cond'],
+    ['Rudder condition','rudder-cond'],['Cutlass bearing','cutlass']],
+   narrative:true,
+   cues:['bottom laminate visual','percussion sounding','uniform audible tones','delamination','soft spots','production voids','prior repairs','grounding damage','bottom paint condition','osmotic blistering','through-hull fittings secured','silicon bronze / marelon','seacocks exercised / seized','seacock stiffness','hose condition below waterline','dry rot','chafing on structural members','cutlass bearing wear / movement','shaft condition','crevice corrosion','shaft turns freely','propeller condition','blade tips','blade to hub connections','skeg damage','impact marks','rudder condition','rudder bearing play','rudder post','packing gland / dripless seal','bellows condition','shaft retaining collar','keel attachment','keel joint separation','keel bolts condition','staining around keel bolts','anode condition','recently replaced anodes','depth transducers secured','damage control plugs recommended','jack stand / trailer obscurement','oily water from crack','trim cylinder seal condition','lower unit gear oil sheen','trailer or jack stand note']},
+
+  {id:'machinery',label:'Machinery',
+   abbrev:[['Engine location','eng-loc'],['Engine type','eng-type'],['Year','eng-yr'],
+    ['Make','eng-make'],['Model','eng-model'],['Horsepower','eng-hp'],
+    ['Serial number','eng-sn'],['Engine hours','eng-hrs'],['Year of last overhaul','eng-ovhrl'],
+    ['Fuel lines','fuel-lines'],['Fuel filters','fuel-filters'],['Fuel shutoff valves','fuel-shutoff'],
+    ['Engine alarms','eng-alarms'],['Engine controls','eng-ctrl'],
+    ['Reverse gear','rev-gear'],['Ratio','rev-ratio'],['Propeller(s)','props']],
+   narrative:true,
+   cues:['engine appearance','engine beds percussion sounded','mating surfaces uniform','oil leaks','fuel leaks','coolant leaks','raw water leaks','exhaust hose condition','double clamped exhaust','single clamp deficiency','mixing elbow condition / patina','heat exchanger / aftercooler','belt condition','belt tension','belt dust on forward face','alternator condition','copper windings uniform','injectors / high-pressure lines','transmission / reverse gear fluid','metallic particulates','engine mounts','oxidation on mounts','ground connections','negative ground','hose clamps','fuel filter / Racor sight bowl','sediment in Racor','controls operation','shift linkage','throttle linkage','tactile feedback shifting','cowling removal limited by winter cover','outboard bracket fasteners','armature connection','trim and tilt assembly','hydraulic fluid on trim cylinders','skeg damage','lower unit sheen','oil analysis recommended','absorbent bilge pad noted','engine oil full and clean','hour meter reading']},
+
+  {id:'steering',label:'Steering',
+   abbrev:[['Type of steering','steer-type'],['Number of stations','steer-stations'],
+    ['Access to system','steer-access'],['Ease of operation','steer-ease'],
+    ['Rudder stop','rudder-stop'],['Trim tabs','trim-tabs'],['Bow thruster','bow-thruster'],['Auto pilot','autopilot']],
+   narrative:true,
+   cues:['helm operation','chock to chock','play at helm','hydraulic fluid sheen','ram assembly secured','fastener oxidation','hose leads condition','rudder stops functional','visibility from helm unobstructed','trim tabs structural condition','trim tab motor / hydraulic leads','trim tab fasteners leaking','bow thruster operable','thruster fuse / over-current shutoff','non-conductive boot on thruster terminal','autopilot energized / engaged','autopilot hydraulic pump','autopilot sweeper seal','quadrant / cable steering','pedestal condition','cable fraying / oxidized wear','armature fasteners greased','Lectrotab / Bennett tabs','tab armatures secured','aluminum tabs free of wear','winter cover limited exercise']},
+
+  {id:'electrical',label:'Electrical',
+   abbrev:[['Wiring type','wire-type'],['Wiring condition','wire-cond'],['Panel type','panel-type'],
+    ['Number and type of batteries','batt-type'],['Battery location','batt-loc'],['Battery installation','batt-install']],
+   narrative:true,
+   cues:['DC system voltage','AC system voltage','wiring leads condition','secured on 18" schedule','chafe protection','heat damage','corrosion','battery appearance','battery boxes / bins','electrolyte containment','battery boiling over / overcharged','battery selector switch','within 72" of bank','breaker panel','circuit protection','ground harness','DC grounding bus oxidation','navigation lights tested','bilge pump circuits','shore power inlet','GFCI outlets','inverter / charger','case grounds metallic appliances','non-conductive boots','high water alarm absent','smoke detector absent','CO detector','wing nuts on terminals','unlabeled wiring','unsecured wiring runs','freshwater pump oxidized','strainer not winterized','map light frame dislodged','wiring labeled and organized','overcurrent protection within 72"']},
+
+  {id:'tankage',label:'Tankage',
+   abbrev:[['Fuel tank – number & type','fuel-tank-type'],['Fuel tank material','fuel-tank-mat'],
+    ['Fuel tank capacity','fuel-cap'],['Fuel tank condition','fuel-tank-cond'],
+    ['Potable water – number & material','water-mat'],['Water capacity & location','water-cap'],
+    ['Water condition','water-cond'],['Waste – number & material','waste-mat'],
+    ['Waste capacity & location','waste-cap'],['Waste condition','waste-cond']],
+   narrative:true,
+   cues:['fuel tank visual condition','structural pitting','poultice corrosion','bulging or fatigue','fuel leaks / sheens','fuel odors','Racor sight bowl / sediment','fuel delivery hose – A-I','fill hose – A-II','double clamped connections','anti-siphon valve operable','checked hose around clamp','bonding – tank and fill','tank vent condition / mesh','accessibility to view','potable water pump operable','FDA approved PEX tubing','potable tank vent broken','winterization evidence','in-line strainer winterized','holding tank visual','waste hose condition','age-related wear on hoses','macerator operable','Y-valve configuration','type III MSD','overboard discharge seacock','fuel filter – clean / sediment','sheen near fuel lines','standing fuel in bilge','LPG locker vapor tight to hull','LPG locker opens to outside atmosphere','LPG locker bottom vent – self-draining','LPG vent diameter adequate – min 1/2"','LPG vent opening 20" from hull openings','LPG locker latching cover / gasket','LPG pressure gauge visible in locker','LPG pressure regulator present','LPG solenoid shutoff valve operable','LPG fuel line condition / chafing','LPG rubber delivery hoses free of wear','LPG locker used for LPG only','LPG safety label on cylinder']},
+
+  {id:'safety',label:'Safety Equip.',
+   abbrev:[['Built-in fire system','fire-builtin'],['Hand-held extinguishers','fire-held'],
+    ['Number of bilge pumps','bilge-num'],['Bilge pump condition','bilge-cond'],
+    ['High water alarm','hwa'],['Anchor','anchor'],['Rode','rode'],['Horn','horn'],
+    ['Life ring','lifering'],['PFDs','pfds'],['Flare kit','flares'],
+    ['CO detector','co'],['Smoke detector','smoke'],['GFCI outlets','gfci'],
+    ['EPIRB','epirb'],['Nav lights','navlights']],
+   narrative:false},
+
+  {id:'electronics',label:'Electronics',
+   abbrev:[['Depth','depth'],['Plotter','plotter'],['Radar','radar'],['VHF','vhf'],['Compass','compass'],
+    ['Cabin lights','cabin-lts'],['Courtesy lights','court-lts'],['Cockpit lights','cockpit-lts'],
+    ['Windlass','windlass'],['Air conditioning','ac'],['Water heater','waterheater'],
+    ['Battery charger','batt-charger'],['Refrigerator','fridge'],['Stereo','stereo'],
+    ['Solar','solar'],['Underwater lights','uw-lts'],['Windshield wipers','wipers'],
+    ['Generator','gen'],['Bow thruster (electronics)','bte']],
+   editableAbbrev:true,
+   narrative:false},
+
+  {id:'cr',label:'C&R',abbrev:[],narrative:false,special:'cr'},
+];
+
+/* ── Addendum sections (sea trial / haul out focused) ── */
+const SECS_ADDENDUM=[
+  {id:'add-seatrial',label:'Sea Trial',
+   abbrev:[['Sea trial date','st-date'],['Sea trial location','st-loc'],['Present at sea trial','st-present'],
+    ['Conditions','st-conditions'],['Engine start / idle','st-start'],['RPM at WOT','st-wot-rpm'],
+    ['Speed at WOT','st-wot-spd'],['Vibration','st-vib'],['Steering response','st-steer'],
+    ['Trim tab function','st-trim'],['Helm bias','st-bias'],['Engine alarms tested','st-alarms'],
+    ['Throttle / shift response','st-throttle'],['Electronics underway','st-elec']],
+   narrative:true,
+   cues:['engine cold start behavior','warm idle stability','transition through hump','WOT RPM within range','speed vs. expected','vibration at cruise','vibration at WOT','cavitation observed','propeller walk','steering effort / play','auto-pilot function','trim tabs full travel','engine gauges underway','bilge pump activation','blower pre-start','exhaust color / smoke','exhaust temperature','exhaust water flow','through-hull seacock condition underway','unusual noises','transmission engagement','engine cooling water flow','strainer condition','anything noted at helm','overall maneuverability']},
+  {id:'add-haulout',label:'Haul Out',
+   abbrev:[['Haul out date','ho-date'],['Haul out facility','ho-facility'],['Present at haul out','ho-present'],
+    ['Bottom paint type','ho-paint'],['Bottom paint condition','ho-paint-cond'],
+    ['Osmotic blistering','ho-blister'],['Keel condition','ho-keel'],['Keel joint','ho-keel-jt'],
+    ['Number of thru-hulls','ho-thru-count'],['Seacock exercise result','ho-seacock'],
+    ['Propeller condition','ho-prop'],['Shaft condition','ho-shaft'],['Cutlass bearing','ho-cutlass'],
+    ['Rudder condition','ho-rudder'],['Strut condition','ho-strut'],['Zinc condition','ho-zinc']],
+   narrative:true,
+   cues:['hull below waterline visual','percussion sounding bottom','uniform audible tones','delamination / soft spots','production voids','osmotic blistering – blister count / depth','prior repairs below waterline','grinding repairs','keel attachment / bedding','keel joint staining','keel bolt condition','staining around keel bolts','gelcoat crazing','grounding damage','through-hull count / material','silicon bronze / marelon / metal','seacock exercised freely','seized seacock','hose condition / age / double clamped','depth transducers secured','propeller blade condition','blade edge damage','blade tip damage','prop hub corrosion','shaft straightness','shaft runout','shaft pitting / corrosion','cutlass bearing clearance','strut condition','strut alignment','rudder bearing play','rudder post seal','packing gland condition','dripless seal / bellows','trim tab actuator seals','zinc anode condition / percentage consumed','anode fastener condition','boat name / hailing port / documentation visible','hull ID number location']},
+];
+
+const SECS_SAIL=[
+  {id:'rigging',label:'Rigging',
+   abbrev:[['Mast material','mast-mat'],['Mast condition','mast-cond'],['Standing rigging type','st-rig-type'],
+    ['Standing rigging condition','st-rig-cond'],['Running rigging condition','run-rig-cond'],
+    ['Sail inventory','sails'],['Sail condition','sail-cond'],['Furling systems','furling'],
+    ['Boom','boom'],['Spreaders','spreaders'],['Chainplates','chainplates']],
+   narrative:true,
+   cues:['mast stepped or stored','mast condition uniform','gooseneck condition','gooseneck rivets','mast base / oxidation','mast partners percussion sounded','spreader condition / oxidation','shroud condition','forestay','backstay','turnbuckles','swage fittings / cracks','cotter pins / split rings','rigging age / reportedly replaced','chainplates visual','chainplate backing plates','oxidized staining at tie-rods','water intrusion at chainplates','chain plate elbows','chainplate rebedding recommended','running rigging condition','halyard condition','sheet condition','mold on running rigging','blocks / travelers / cleats / winches','furling drum condition','furling foil condition','clevis pin at furler base','boom vang / topping lift','in-mast furling condition','sail condition / UV covers','batten pockets','reefing system','backstay tensioner condition','backstay tensioner sweeper seal','Navtech / hydraulic tensioner','pulpit / pushpit movement']},
+];
+
+function getSecs(){
+  if(S.vesselType==='addendum') return [...SECS_ADDENDUM];
+  const s=[...SECS_POWER];
+  if(S.vesselType==='sailboat') s.splice(s.length-1,0,...SECS_SAIL);
+  return s;
+}
+
+/* ── Build section tabs ── */
+function buildSections(){
+  const secs=getSecs();
+  const nav=document.getElementById('section-nav');
+  const content=document.getElementById('section-content');
+  nav.innerHTML=''; content.innerHTML='';
+  secs.forEach((sec,idx)=>{
+    const btn=document.createElement('button');
+    btn.className='snav-btn'+(idx===0?' active':'');
+    btn.id='nb-'+sec.id;
+    nav.appendChild(btn);
+    refreshBtn(sec.id,secs);
+    btn.onclick=()=>showSec(sec.id,secs);
+    const block=document.createElement('div');
+    block.className='section-block'+(idx===0?' visible':'');
+    block.id='sec-'+sec.id;
+    block.innerHTML=buildSecHTML(sec);
+    content.appendChild(block);
+  });
+}
+
+function refreshBtn(id,secs){
+  if(!secs) secs=getSecs();
+  const btn=document.getElementById('nb-'+id);
+  if(!btn) return;
+  const sec=secs.find(s=>s.id===id);
+  const n=S.defs.filter(d=>d.section===id).length;
+  btn.innerHTML=sec.label+(n>0?`<span class="def-badge">${n}</span>`:'');
+}
+
+function refreshAllBtns(){
+  getSecs().forEach(s=>refreshBtn(s.id));
+}
+
+function showSec(id,secs){
+  document.querySelectorAll('.section-block').forEach(b=>b.classList.remove('visible'));
+  document.querySelectorAll('.snav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('visible');
+  document.getElementById('nb-'+id).classList.add('active');
+}
+
+function buildSecHTML(sec){
+  if(sec.special==='cr') return buildCRHTML();
+  let h=`<div class="card"><div class="card-title">${sec.label}</div>`;
+  if(sec.abbrev.length || sec.editableAbbrev){
+    if(sec.editableAbbrev){
+      h+=`<div class="subhead">ABBREVIATED SUMMARY <button onclick="toggleElecEdit()" id="elec-edit-btn" style="font-size:11px;padding:2px 8px;margin-left:8px;background:#378ADD;color:#fff;border:none;border-radius:4px;cursor:pointer;">✎ Edit Rows</button></div>`;
+      h+=`<div id="elec-edit-panel" style="display:none;background:#f8f7f2;border:1px solid #e5e3db;border-radius:8px;padding:10px;margin-bottom:10px;">`;
+      h+=`<div style="font-size:12px;color:#666;margin-bottom:6px;">Uncheck to hide rows. Add custom items below.</div><div id="elec-checklist">`;
+      const hidden=(S.sd['electronics']||{})._hiddenRows||[];
+      sec.abbrev.forEach(([lbl,key])=>{
+        const chk=!hidden.includes(key)?'checked':'';
+        h+=`<label style="display:block;font-size:13px;padding:3px 0;"><input type="checkbox" ${chk} onchange="toggleElecRow('${key}',this.checked)" style="margin-right:6px;">${lbl}</label>`;
+      });
+      h+=`</div><div style="margin-top:8px;display:flex;gap:6px;align-items:center;">`;
+      h+=`<input type="text" id="elec-new-lbl" placeholder="Custom item label…" style="flex:1;font-size:13px;padding:5px 8px;border:1px solid #e5e3db;border-radius:6px;">`;
+      h+=`<button onclick="addElecRow()" style="font-size:12px;padding:5px 10px;background:#378ADD;color:#fff;border:none;border-radius:6px;cursor:pointer;">+ Add</button>`;
+      h+=`</div></div>`;
+      h+=`<table class="abbrev-table">`;
+      const custom=(S.sd['electronics']||{})._customRows||[];
+      const allRows=[...sec.abbrev,...custom.map(r=>[r,'custom-'+r.replace(/\s+/g,'-').toLowerCase()])];
+      allRows.forEach(([lbl,key])=>{
+        if(hidden.includes(key)) return;
+        const val=(S.sd['electronics']||{})[key]||'';
+        h+=`<tr><td>${lbl}</td><td><input type="text" value="${val.replace(/"/g,'&quot;')}" onchange="sv('electronics','${key}',this.value)" placeholder="—"></td></tr>`;
+      });
+      h+=`</table>`;
+    } else {
+      h+=`<div class="subhead">ABBREVIATED SUMMARY</div><table class="abbrev-table">`;
+      sec.abbrev.forEach(([lbl,key])=>{
+        const val=(S.sd[sec.id]||{})[key]||'';
+        h+=`<tr><td>${lbl}</td><td><input type="text" value="${val.replace(/"/g,'&quot;')}" onchange="sv('${sec.id}','${key}',this.value)" placeholder="—"></td></tr>`;
+      });
+      h+=`</table>`;
+    }
+  }
+  if(sec.narrative){
+    const narr=(S.sd[sec.id]||{}).narrative||'';
+    h+=`<div class="subhead">NARRATIVE NOTES</div>`;
+    if(sec.cues){
+      h+=`<div class="cue-bar" id="cues-${sec.id}"><span class="cue-hdr">CUES</span>`;
+      sec.cues.forEach(c=>{h+=`<span class="cue">${c}</span>`;});
+      h+=`</div>`;
+    }
+    h+=`<div class="voice-row"><textarea id="narr-${sec.id}" rows="7" placeholder="Dictate or type findings…" oninput="onNarr('${sec.id}',this)">${narr}</textarea>`;
+    h+=`<button class="mic-btn" onclick="toggleVoice('narr-${sec.id}',this)">🎤</button></div>`;
+    h+=`<div class="rec-row"><div class="rec-dot" id="rec-narr-${sec.id}"></div><div class="rec-label" id="rec-label-narr-${sec.id}"></div></div>`;
+    h+=`<div class="pin-strip">`;
+    h+=`<select id="pp-${sec.id}"><option value="red">Red *</option><option value="blue" selected>Blue</option><option value="green">Green</option></select>`;
+    h+=`<input type="text" id="pt-${sec.id}" placeholder="Flag a finding → auto-adds to C&amp;R">`;
+    h+=`<button class="mic-btn" onclick="toggleVoice('pt-${sec.id}',this)">🎤</button>`;
+    h+=`<button class="std-btn" onclick="openStdModal('${sec.id}')">📋 Standard</button>`;
+    h+=`<button class="pin-btn" onclick="pinDef('${sec.id}')">📌 Pin</button>`;
+    h+=`</div>`;
+    h+=`<div class="rec-row"><div class="rec-dot" id="rec-pt-${sec.id}"></div><div class="rec-label" id="rec-label-pt-${sec.id}"></div></div>`;
+    h+=`<div id="pinned-${sec.id}">${renderPinned(sec.id)}</div>`;
+  }
+  h+=`</div>`;
+  return h;
+}
+
+function toggleElecEdit(){
+  const p=document.getElementById('elec-edit-panel');
+  const b=document.getElementById('elec-edit-btn');
+  if(!p||!b) return;
+  const show=p.style.display==='none';
+  p.style.display=show?'block':'none';
+  b.textContent=show?'✓ Done':'✎ Edit Rows';
+}
+function toggleElecRow(key,checked){
+  if(!S.sd['electronics']) S.sd['electronics']={};
+  let hidden=S.sd['electronics']._hiddenRows||[];
+  if(!checked && !hidden.includes(key)) hidden.push(key);
+  if(checked) hidden=hidden.filter(k=>k!==key);
+  S.sd['electronics']._hiddenRows=hidden;
+  autoSave();
+}
+function addElecRow(){
+  const inp=document.getElementById('elec-new-lbl');
+  const lbl=(inp.value||'').trim();
+  if(!lbl) return;
+  if(!S.sd['electronics']) S.sd['electronics']={};
+  const custom=S.sd['electronics']._customRows||[];
+  if(!custom.includes(lbl)){custom.push(lbl); S.sd['electronics']._customRows=custom;}
+  inp.value='';
+  autoSave();
+  const secs=getSecs();
+  const sec=secs.find(s=>s.id==='electronics');
+  if(sec) document.getElementById('sec-electronics').innerHTML=buildSecHTML(sec);
+}
+
+
+function onNarr(secId,el){
+  const cb=document.getElementById('cues-'+secId);
+  if(cb) cb.classList.toggle('dimmed',el.value.trim().length>0);
+  sv(secId,'narrative',mc(el.value));
+  autoSave();
+}
+
+function pinDef(secId){
+  const pri=document.getElementById('pp-'+secId).value;
+  const txt=mc((document.getElementById('pt-'+secId).value||'').trim());
+  if(!txt) return;
+  S.defs.push({text:txt,priority:pri,section:secId});
+  document.getElementById('pt-'+secId).value='';
+  document.getElementById('pinned-'+secId).innerHTML=renderPinned(secId);
+  refreshAllBtns();
+  const ml=document.getElementById('cr-master-list');
+  if(ml) ml.innerHTML=renderAllDefs();
+  autoSave();
+}
+
+function renderPinned(secId){
+  const items=S.defs.map((d,i)=>({...d,i})).filter(d=>d.section===secId);
+  if(!items.length) return '';
+  return `<div style="margin-top:8px">`+items.map(d=>`
+    <div class="def-item ${d.priority==='blue'?'blue-item':d.priority==='green'?'green-item':''}" style="border-left-color:${pc(d.priority)}">
+      <div class="def-meta">${priLabel(d.priority)}</div>
+      <div class="def-body"><div class="def-text">${d.text}</div></div>
+      <div class="def-remove" onclick="removeDef(${d.i},'${secId}')">×</div>
+    </div>`).join('')+`</div>`;
+}
+
+function renderAllDefs(){
+  if(!S.defs.length) return `<div class="empty-note">No findings pinned yet. Use the 📌 Pin button in each section, or add directly below.</div>`;
+  const secs=getSecs();
+  return S.defs.map((d,i)=>{
+    const secLabel=secs.find(s=>s.id===d.section)?.label||'';
+    return `<div class="def-item ${d.priority==='blue'?'blue-item':d.priority==='green'?'green-item':''}" style="border-left-color:${pc(d.priority)}">
+      <div class="def-meta">${priLabel(d.priority)}</div>
+      <div class="def-body"><div class="def-text">${d.text}</div>${secLabel&&secLabel!=='C&R'?`<div class="def-src">from ${secLabel}</div>`:''}</div>
+      <div class="def-remove" onclick="removeDef(${i},null)">×</div>
+    </div>`;
+  }).join('');
+}
+
+function pc(p){return p==='red'?'#E24B4A':p==='blue'?'#378ADD':'#639922';}
+function priLabel(p){return p==='red'?'RED *':p==='blue'?'BLUE':'GREEN';}
+
+function removeDef(i,secId){
+  S.defs.splice(i,1);
+  if(secId){const p=document.getElementById('pinned-'+secId);if(p)p.innerHTML=renderPinned(secId);}
+  const ml=document.getElementById('cr-master-list');
+  if(ml) ml.innerHTML=renderAllDefs();
+  refreshAllBtns();
+  autoSave();
+}
+
+function buildCRHTML(){
+  return `<div class="card">
+    <div class="card-title">Comments &amp; Recommendations</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <span style="font-size:11px;padding:3px 8px;background:#FCEBEB;border-radius:20px;color:#A32D2D;font-weight:600">● Red = Safety / Federal</span>
+      <span style="font-size:11px;padding:3px 8px;background:#E6F1FB;border-radius:20px;color:#185FA5;font-weight:600">● Blue = Maintenance</span>
+      <span style="font-size:11px;padding:3px 8px;background:#EAF3DE;border-radius:20px;color:#3B6D11;font-weight:600">● Green = Cosmetic</span>
+    </div>
+    <div style="font-size:12px;color:#888780;margin-bottom:10px">Findings pinned in each section appear here automatically, tagged with their source section.</div>
+    <div id="cr-master-list">${renderAllDefs()}</div>
+    <div style="margin-top:14px;border-top:1px solid #f1efe8;padding-top:12px">
+      <div class="subhead" style="margin-top:0">ADD ADDITIONAL FINDING</div>
+      <div class="pin-strip" style="background:#fff;border:1px solid #e5e3db">
+        <select id="cr-pri"><option value="red">Red *</option><option value="blue" selected>Blue</option><option value="green">Green</option></select>
+        <input type="text" id="cr-txt" placeholder="Describe finding…">
+        <button class="mic-btn" onclick="toggleVoice('cr-txt',this)">🎤</button>
+        <button class="std-btn" onclick="openStdModalCR()">📋 Standard</button>
+        <button class="pin-btn" onclick="addCRDef()">+ Add</button>
+      </div>
+      <div class="rec-row"><div class="rec-dot" id="rec-cr-txt"></div><div class="rec-label" id="rec-label-cr-txt"></div></div>
+    </div>
+  </div>`;
+}
+
+function addCRDef(){
+  const pri=document.getElementById('cr-pri').value;
+  const txt=mc((document.getElementById('cr-txt').value||'').trim());
+  if(!txt) return;
+  S.defs.push({text:txt,priority:pri,section:'cr'});
+  document.getElementById('cr-txt').value='';
+  document.getElementById('cr-master-list').innerHTML=renderAllDefs();
+  refreshAllBtns();
+  autoSave();
+}
+
+function sv(secId,key,val){
+  if(!S.sd[secId]) S.sd[secId]={};
+  S.sd[secId][key]=val;
+  autoSave();
+}
+
+/* ── Voice ── */
+function toggleVoice(fid,btn){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    alert('Voice input requires Chrome or Safari.');return;
+  }
+  if(activeField===fid&&recog){recog.stop();return;}
+  if(recog) recog.stop();
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recog=new SR();
+  recog.continuous=true;recog.interimResults=true;recog.lang='en-US';
+  activeField=fid;
+  btn.classList.add('recording');btn.textContent='⏹';
+  const dot=document.getElementById('rec-'+fid);
+  const lbl=document.getElementById('rec-label-'+fid);
+  if(dot)dot.classList.add('active');
+  if(lbl)lbl.textContent='Recording… tap ⏹ to stop';
+  const el=document.getElementById(fid);
+  const base=el?el.value:'';
+  recog.onresult=e=>{
+    let fin='';
+    for(let i=e.resultIndex;i<e.results.length;i++) if(e.results[i].isFinal) fin+=e.results[i][0].transcript;
+    if(fin&&el) el.value=mc(base+(base?' ':'')+fin);
+  };
+  recog.onend=()=>{
+    btn.classList.remove('recording');btn.textContent='🎤';
+    if(dot)dot.classList.remove('active');
+    if(lbl)lbl.textContent='';
+    activeField=null;recog=null;
+  };
+  recog.start();
+}
+
+/* ── Output ── */
+function buildOutput(){
+  const v=id=>(document.getElementById(id)||{}).value||'';
+  const g=(s,k)=>(S.sd[s]||{})[k]||'';
+  const rawDate=v('survey-date');
+  const date=rawDate?new Date(rawDate+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'[DATE]';
+  const secs=getSecs();
+  let o='McDONOUGH MARINE SURVEYORS L.L.C.\nMarine Surveying & Consultation\nABYC Certified Master Advisor, Electrical, Standards, Systems\nSAMS Accredited Marine Surveyor\n\n';
+  o+=hr()+'\n'+v('survey-type').toUpperCase()+'\n'+hr()+'\n\n';
+  o+=`FILE NUMBER: ${v('file-num')||'[FILE #]'}          Date: ${date}\n\n"${v('vessel-name')||'[VESSEL NAME]'}"\n\n`+hr()+'\n\n';
+  o+=`AT THE REQUEST OF    : ${v('client-name')||'[CLIENT]'}\n`;
+  o+=`VESSEL NAME          : "${v('vessel-name')||'[VESSEL NAME]'}"\n`;
+  o+=`MANUFACTURER         : ${v('maker')||'[MANUFACTURER]'}\n`;
+  o+=`HULL ID NUMBER       : ${v('hin')||'[HIN]'}\n`;
+  o+=`REGISTRATION NUMBER  : ${v('reg')||'[REG #]'}\n`;
+  o+=`VESSEL TYPE          : ${v('vtype-desc')||'[VESSEL TYPE]'}\n`;
+  o+=`HULL TYPE            : ${v('hull-type')||'[HULL TYPE]'}\n`;
+  o+=`MODEL                : ${v('model')||'[MODEL]'}\n`;
+  o+=`YEAR BUILT           : ${v('year')||'[YEAR]'}\n`;
+  o+=`LENGTH OVERALL       : ${v('loa')||'[LOA]'}\n`;
+  o+=`BEAM                 : ${v('beam')||'[BEAM]'}\n`;
+  o+=`DRAFT                : ${v('draft')||'[DRAFT]'}\n`;
+  o+=`DISPLACEMENT         : ${v('displ')||'[DISPLACEMENT]'}\n`;
+  o+=`HULL COLOR           : ${v('hull-color')||'[COLOR]'}\n`;
+  o+=`SURVEY LOCATION      : ${v('survey-loc')||'[LOCATION]'}\n\n`;
+  const st=v('sea-trial');
+  o+=hr()+'\nSCOPE OF SURVEY\n'+hr()+'\n\n';
+  o+=`The previously mentioned vessel was surveyed for ${v('survey-type').toLowerCase()} on ${date}, ${v('inspect-cond')||'ashore only'} at ${v('survey-loc')||'[LOCATION]'}. `;
+  o+=st==='Performed'?'A sea trial was performed.':st==='Scheduled separately'?'A sea trial is scheduled separately.':'No sea trial was performed.';
+  o+=` The vessel was inspected in a ${v('vessel-state')||'[STATE]'} condition. Testing of DC systems was conducted utilizing the equipped onboard batteries. Percussion sounding was performed using a lightweight plastic hammer, and moisture readings were gathered utilizing a Tramex Skipper Plus moisture meter. Weather conditions were ${v('weather')||'[WEATHER]'}. I was accompanied by ${v('accompanied')||'[ACCOMPANIED BY]'} who requested this inspection. This letter is my written report of that survey.`;
+  const sn=g('scope','narrative');if(sn)o+='\n\n'+sn;
+  o+='\n\nNOTE: Use of Red, Blue, and Green highlights in the body of this report will indicate that a recommendation will be listed in the section "COMMENTS AND RECOMMENDATIONS" pertaining to that item.\n\n';
+  secs.forEach(sec=>{
+    if(sec.special) return;
+    o+=hr()+'\n'+sec.label.toUpperCase()+'\n'+hr()+'\n\n';
+    if(sec.abbrev.length){sec.abbrev.forEach(([lbl,key])=>{o+=`${lbl.padEnd(34)}: ${g(sec.id,key)||'—'}\n`;});o+='\n';}
+    const narr=g(sec.id,'narrative');
+    if(narr)o+=narr+'\n\n';
+    else if(sec.narrative)o+=`[NARRATIVE — add findings for ${sec.label}]\n\n`;
+  });
+  o+=hr()+'\nCOMMENTS AND RECOMMENDATIONS\n'+hr()+'\n\n';
+  o+=`The following recommendations identified in red, in bold, with an asterisk (*) are required by state laws or federal laws and U.S.C.G regulations or are considered by the attending surveyor to represent unsafe operating conditions. These recommendations should be considered primary and receive priority in the maintenance schedule aboard the vessel.\n\n`;
+  const reds=S.defs.filter(d=>d.priority==='red');
+  const blues=S.defs.filter(d=>d.priority==='blue');
+  const greens=S.defs.filter(d=>d.priority==='green');
+  let num=1;
+  reds.forEach(d=>{o+=`${num}*  ${d.text}\n\n`;num++;});
+  if(blues.length)o+=`The following recommendations identified in blue are maintenance items believed by this surveyor to be important in the general maintenance of the vessel. Failure to remedy the following recommendations could incur further cost to the vessel owner.\n\n`;
+  blues.forEach(d=>{o+=`${num}.  ${d.text}\n\n`;num++;});
+  if(greens.length)o+=`The following recommendations identified in green are determined to be cosmetic in nature and non-detrimental to the safe use of the vessel.\n\n`;
+  greens.forEach(d=>{o+=`${num}.  ${d.text}\n\n`;num++;});
+  if(!S.defs.length)o+=`[NO DEFICIENCIES LOGGED]\n\n`;
+  o+=hr()+'\nESTIMATED MARKET VALUE\n'+hr()+'\n\n[MARKET VALUE ANALYSIS — TO BE COMPLETED]\n\n';
+  o+=hr()+'\nCOMPARATIVE LISTINGS\n'+hr()+'\n\n[INSERT COMPARATIVE LISTINGS]\n\n';
+  o+=hr()+'\nPHOTOGRAPHS\n'+hr()+'\n\n[INSERT VESSEL PHOTOGRAPHS AND DEFICIENCY PHOTOS]';
+  document.getElementById('output-box').textContent=o;
+  let ds=`DEFICIENCY SUMMARY\n${'─'.repeat(40)}\n\n`;
+  if(!S.defs.length){ds+='No deficiencies logged.';}
+  else{
+    if(reds.length){ds+=`SAFETY / REQUIRED (${reds.length}):\n`;reds.forEach((d,i)=>{ds+=`  ${i+1}*  ${d.text}\n`;});}
+    if(blues.length){ds+=`\nMAINTENANCE (${blues.length}):\n`;blues.forEach((d,i)=>{ds+=`  ${i+1}.  ${d.text}\n`;});}
+    if(greens.length){ds+=`\nCOSMETIC (${greens.length}):\n`;greens.forEach((d,i)=>{ds+=`  ${i+1}.  ${d.text}\n`;});}
+  }
+  document.getElementById('def-output-box').textContent=ds;
+}
+
+function hr(){return '─'.repeat(60);}
+
+function doCopy(boxId,btnId,label){
+  const txt=document.getElementById(boxId).textContent;
+  const btn=document.getElementById(btnId);
+  navigator.clipboard.writeText(txt).then(()=>{btn.textContent='Copied!';setTimeout(()=>{btn.textContent=label;},2000);});
+}
+
+/* ── Init ── */
+document.getElementById('survey-date').valueAsDate=new Date();
+checkRestore();
+</script>
+</body>
+</html>
