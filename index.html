@@ -317,11 +317,11 @@ textarea {
 
 /* ── Narrative field ──────────────────────────────────────── */
 .narrative-card {
-  background: linear-gradient(135deg, rgba(13,115,119,0.03) 0%, rgba(15,37,68,0.03) 100%);
-  border: 1.5px solid rgba(13,115,119,0.2);
+  background: linear-gradient(135deg, rgba(13,115,119,0.02) 0%, rgba(15,37,68,0.02) 100%);
+  border: 1.5px solid rgba(13,115,119,0.18);
   border-radius: var(--radius);
-  padding: 14px;
-  margin-top: 6px;
+  padding: 14px 14px 12px;
+  margin-top: 10px;
 }
 .narrative-label {
   font-size: 11px;
@@ -345,10 +345,10 @@ textarea {
 .voice-row{display:flex;gap:8px;align-items:flex-start}
 .voice-row textarea {
   flex: 1;
-  min-height: 160px;
+  min-height: 220px;
   font-size: 15px;
-  line-height: 1.7;
-  padding: 12px 14px;
+  line-height: 1.75;
+  padding: 14px 16px;
   border: 1.5px solid rgba(13,115,119,0.25);
   border-radius: var(--radius-sm);
   background: var(--white);
@@ -399,34 +399,55 @@ textarea {
 .cue-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
   margin-bottom: 8px;
-  padding: 10px 12px;
-  background: linear-gradient(135deg, rgba(201,147,58,0.06), rgba(253,243,227,0.8));
-  border: 1px solid rgba(201,147,58,0.25);
+  padding: 8px 10px;
+  background: linear-gradient(135deg, rgba(201,147,58,0.05), rgba(253,243,227,0.7));
+  border: 1px solid rgba(201,147,58,0.2);
   border-radius: var(--radius-sm);
   transition: opacity 0.3s;
 }
-.cue-bar.dimmed{opacity:0.25}
+.cue-bar.dimmed{opacity:0.2}
 .cue {
-  font-size: 11px;
-  color: var(--gold);
-  background: var(--gold-pale);
-  border: 1px solid rgba(201,147,58,0.3);
-  border-radius: 20px;
-  padding: 3px 9px;
-  white-space: nowrap;
+  font-size: 10.5px;
+  color: #7a5c1e;
+  background: rgba(201,147,58,0.1);
+  border: 1px solid rgba(201,147,58,0.22);
+  border-radius: 4px;
+  padding: 2px 7px;
+  white-space: normal;
+  word-break: break-word;
   user-select: none;
   font-weight: 500;
+  line-height: 1.4;
+  max-width: 100%;
+}
+.cue-primary {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b4e12;
+  background: rgba(201,147,58,0.13);
+  border-color: rgba(201,147,58,0.28);
+}
+.cue-secondary {
+  font-size: 10px;
+  font-weight: 400;
+  color: #8a6a30;
+  background: rgba(201,147,58,0.06);
+  border-color: rgba(201,147,58,0.15);
+  opacity: 0.85;
 }
 .cue-hdr {
-  font-size: 10px;
-  color: rgba(201,147,58,0.6);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  align-self: center;
-  margin-right: 2px;
+  font-size: 9px;
+  color: rgba(201,147,58,0.55);
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  align-self: flex-start;
+  padding-top: 3px;
+  margin-right: 3px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* ── Pin strip ────────────────────────────────────────────── */
@@ -677,22 +698,24 @@ textarea {
 .chip-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  padding: 6px 0 4px 0;
+  gap: 5px;
+  padding: 6px 2px 2px 0;
 }
 .chip {
-  font-size: 11px;
+  font-size: 11.5px;
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
-  padding: 3px 10px;
+  padding: 4px 11px;
   background: var(--teal-pale);
   color: var(--teal);
   border: 1px solid rgba(13,115,119,0.25);
   border-radius: 20px;
   cursor: pointer;
-  white-space: nowrap;
-  line-height: 1.5;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.45;
   transition: all 0.12s;
+  text-align: left;
 }
 .chip:active, .chip-active {
   background: var(--teal);
@@ -25368,14 +25391,18 @@ function buildSecHTML(sec){
       allRows.forEach(([lbl,key])=>{
         if(hidden.includes(key)) return;
         const val=(S.sd[sid]||{})[key]||'';
-        const chips_ea = renderChips(sid, key, val);h+=`<tr><td>${lbl}</td><td><input type="text" id="${sid}-${key}" value="${val.replace(/"/g,'&quot;')}" onchange="sv('${sid}','${key}',this.value)" placeholder="—">${chips_ea}</td></tr>`;
+        const chips_ea = renderChips(sid, key, val);
+        h+=`<tr><td${chips_ea?' style="padding-bottom:2px"':''}>${lbl}</td><td${chips_ea?' style="padding-bottom:2px"':''}><input type="text" id="${sid}-${key}" value="${val.replace(/"/g,'&quot;')}" onchange="sv('${sid}','${key}',this.value)" placeholder="—"></td></tr>`;
+        if(chips_ea) h+=`<tr><td colspan="2" style="padding:0 6px 8px;border-bottom:1px solid #ede9e0;">${chips_ea}</td></tr>`;
       });
       h+=`</table>`;
     } else {
       h+=`<div class="subhead">ABBREVIATED SUMMARY</div><table class="abbrev-table">`;
       sec.abbrev.forEach(([lbl,key])=>{
         const val=(S.sd[sec.id]||{})[key]||'';
-        const chips_sb = renderChips(sec.id, key, val);h+=`<tr><td>${lbl}</td><td><input type="text" id="${sec.id}-${key}" value="${val.replace(/"/g,'&quot;')}" onchange="sv('${sec.id}','${key}',this.value)" placeholder="—">${chips_sb}</td></tr>`;
+        const chips_sb = renderChips(sec.id, key, val);
+        h+=`<tr><td${chips_sb?' style="padding-bottom:2px"':''}>${lbl}</td><td${chips_sb?' style="padding-bottom:2px"':''}><input type="text" id="${sec.id}-${key}" value="${val.replace(/"/g,'&quot;')}" onchange="sv('${sec.id}','${key}',this.value)" placeholder="—"></td></tr>`;
+        if(chips_sb) h+=`<tr><td colspan="2" style="padding:0 6px 8px;border-bottom:1px solid #ede9e0;">${chips_sb}</td></tr>`;
       });
       h+=`</table>`;
     }
@@ -25385,7 +25412,10 @@ function buildSecHTML(sec){
     h+=`<div class="subhead">NARRATIVE NOTES</div>`;
     if(sec.cues){
       h+=`<div class="cue-bar" id="cues-${sec.id}"><span class="cue-hdr">CUES</span>`;
-      sec.cues.forEach(c=>{h+=`<span class="cue">${c}</span>`;});
+      sec.cues.forEach(c=>{
+        const isPrimary = /^[①②③④⑤⑥⑦]/.test(c);
+        h+=`<span class="cue${isPrimary?' cue-primary':' cue-secondary'}">${c}</span>`;
+      });
       h+=`</div>`;
     }
     const hasPrefill = typeof NARRATIVE_PREFILL !== 'undefined' && NARRATIVE_PREFILL[sec.id];
