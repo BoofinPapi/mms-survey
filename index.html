@@ -122,6 +122,32 @@ textarea{resize:vertical;min-height:80px;line-height:1.5}
 .restore-banner{background:#EAF3DE;border:1px solid #639922;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .restore-banner p{font-size:13px;color:#3B6D11}
 .restore-banner button{font-size:12px;padding:5px 12px;border:1px solid #639922;border-radius:6px;background:#fff;color:#3B6D11;cursor:pointer;white-space:nowrap;font-family:inherit}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 5px 0 7px 0;
+}
+.chip {
+  font-size: 11px;
+  font-family: inherit;
+  padding: 3px 9px;
+  background: #f0f4fa;
+  color: #2C5282;
+  border: 1px solid #c8d8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition: background 0.1s, color 0.1s;
+}
+.chip:active, .chip-active {
+  background: #1B3A6B;
+  color: #fff;
+  border-color: #1B3A6B;
+}
+
 </style>
 </head>
 <body>
@@ -226,7 +252,7 @@ textarea{resize:vertical;min-height:80px;line-height:1.5}
     </div>
     <div class="field-row">
       <div class="field-group"><div class="field-label">Hull color</div><input type="text" id="hull-color" placeholder="Blue with red &amp; white stripe" onchange="autoSave()"></div>
-      <div class="field-group"><div class="field-label">Registration #</div><input type="text" id="reg" placeholder="NH 2588 JZ" onchange="autoSave()"></div>
+      <div class="field-group"><div class="field-label" style="display:flex;align-items:center;justify-content:space-between;"><span id="reg-label-display">Registration #</span><button onclick="toggleRegType()" id="reg-toggle-btn" style="font-size:11px;padding:2px 8px;background:#E8F0FB;color:#1B3A6B;border:1px solid #b8d0ef;border-radius:4px;cursor:pointer;white-space:nowrap;font-family:inherit;">USCG Doc #</button></div><input type="text" id="reg" placeholder="NH 2588 JZ" onchange="autoSave()"><input type="hidden" id="reg-type" value="registration"></div>
     </div>
     <div class="field-row full"><div class="field-group"><div class="field-label">Hull type</div><input type="text" id="hull-type" placeholder="Modified Vee, full keel" onchange="autoSave()"></div></div>
   </div>
@@ -23341,7 +23367,7 @@ function makeReportId(){
 const FIELD_IDS = ['survey-type','file-num','survey-date','survey-loc','client-name',
   'vessel-name','hin','year','maker','model','vtype-desc','loa','beam','draft',
   'displ','hull-color','reg','hull-type','inspect-cond','sea-trial','vessel-state',
-  'dc-avail','weather','accompanied','scope-notes','vessel-desc','intended-use','emv-production','accompanied-type','emv-condition'];
+  'dc-avail','weather','accompanied','scope-notes','vessel-desc','intended-use','emv-production','accompanied-type','emv-condition','reg-type'];
 
 function gatherFields(){
   return FIELD_IDS.reduce((acc,id)=>{
@@ -23399,6 +23425,7 @@ function loadReport(id){
     if(!raw) return false;
     const data = JSON.parse(raw);
     if(data.S) S = data.S;
+    // Populate all form fields
     if(data.fields){
       Object.entries(data.fields).forEach(([fid,val])=>{
         const el=document.getElementById(fid);
@@ -23406,40 +23433,57 @@ function loadReport(id){
       });
     }
     setActiveId(id);
-    if(S.vesselType) selectType(S.vesselType);
+    // Restore vessel type selection visually
+    const vt = (S.vesselType)||'powerboat';
+    ['powerboat','sailboat','commercial','addendum'].forEach(v=>{
+      const el=document.getElementById('vt-'+v);
+      if(el) el.classList.toggle('selected', v===vt);
+    });
+    S.vesselType = vt;
     updateBadge();
+    restoreRegType(data.fields && data.fields['reg-type']);
+    // Flash confirmation
+    const si = document.getElementById('save-indicator');
+    if(si){ si.textContent='✓ Report loaded'; si.style.display='block';
+      setTimeout(()=>{ si.textContent='✓ Saved'; si.style.display='none'; },2000); }
     return true;
-  }catch(e){ return false; }
+  }catch(e){ console.error('loadReport error:',e); return false; }
 }
 
 // ── Start a brand new report (does NOT overwrite anything) ──
 function newReport(){
   const newId = makeReportId();
   setActiveId(newId);
-  // Reset state
   S = {vesselType:'powerboat', sd:{}, defs:[]};
-  FIELD_IDS.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  ['powerboat','sailboat','commercial','addendum'].forEach(v=>{
-    const el=document.getElementById('vt-'+v);
-    if(el) el.classList.toggle('selected',v==='powerboat');
-  });
-  S.vesselType='powerboat';
-  updateBadge();
   goTo(0);
-  saveData();
+  setTimeout(()=>{
+    FIELD_IDS.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    ['powerboat','sailboat','commercial','addendum'].forEach(v=>{
+      const el=document.getElementById('vt-'+v);
+      if(el) el.classList.toggle('selected',v==='powerboat');
+    });
+    S.vesselType='powerboat';
+    updateBadge();
+    saveData();
+  }, 60);
 }
 
 // ── Delete a report ──
 function deleteReport(id){
-  const idx = getReportIndex().filter(r=>r.id!==id);
-  saveReportIndex(idx);
+  const remaining = getReportIndex().filter(r=>r.id!==id);
+  saveReportIndex(remaining);
   lsDel('mms_rpt_'+id);
   if(getActiveId()===id){
-    // Switch to most recent or start fresh
-    if(idx.length){ loadReport(idx[0].id); }
-    else { newReport(); }
+    if(remaining.length){
+      closeReportManager();
+      goTo(0);
+      setTimeout(()=>{ loadReport(remaining[0].id); renderReportManager(); }, 60);
+    } else {
+      newReport();
+    }
+  } else {
+    renderReportManager();
   }
-  renderReportManager();
 }
 
 // ── On startup: restore last active report ──
@@ -23486,6 +23530,7 @@ function restoreData(){
   }
   if(S.vesselType) selectType(S.vesselType);
   updateBadge();
+  restoreRegType(data.fields && data.fields['reg-type']);
   dismissRestore();
   // If this was a legacy restore, save it into the new system now
   if(!window._pendingRestoreId) saveData();
@@ -23535,13 +23580,13 @@ function renderReportManager(){
 }
 
 function switchReport(id){
-  // Save current report first
-  saveData();
-  // Load the selected one
-  loadReport(id);
+  saveData();                    // save current before switching
   closeReportManager();
-  // Rebuild current screen
-  goTo(0);
+  goTo(0);                       // navigate to setup screen FIRST so DOM exists
+  setTimeout(()=>{               // then populate fields after DOM is ready
+    loadReport(id);
+    renderProfiles();
+  }, 60);
 }
 
 /* ── Vessel type ── */
@@ -24044,14 +24089,14 @@ function buildSecHTML(sec){
       allRows.forEach(([lbl,key])=>{
         if(hidden.includes(key)) return;
         const val=(S.sd[sid]||{})[key]||'';
-        h+=`<tr><td>${lbl}</td><td><input type="text" value="${val.replace(/"/g,'&quot;')}" onchange="sv('${sid}','${key}',this.value)" placeholder="—"></td></tr>`;
+        const chips_ea = renderChips(sid, key, val);h+=`<tr><td>${lbl}</td><td><input type="text" id="${sid}-${key}" value="${val.replace(/"/g,'&quot;')}" onchange="sv('${sid}','${key}',this.value)" placeholder="—">${chips_ea}</td></tr>`;
       });
       h+=`</table>`;
     } else {
       h+=`<div class="subhead">ABBREVIATED SUMMARY</div><table class="abbrev-table">`;
       sec.abbrev.forEach(([lbl,key])=>{
         const val=(S.sd[sec.id]||{})[key]||'';
-        h+=`<tr><td>${lbl}</td><td><input type="text" value="${val.replace(/"/g,'&quot;')}" onchange="sv('${sec.id}','${key}',this.value)" placeholder="—"></td></tr>`;
+        const chips_sb = renderChips(sec.id, key, val);h+=`<tr><td>${lbl}</td><td><input type="text" id="${sec.id}-${key}" value="${val.replace(/"/g,'&quot;')}" onchange="sv('${sec.id}','${key}',this.value)" placeholder="—">${chips_sb}</td></tr>`;
       });
       h+=`</table>`;
     }
@@ -24264,7 +24309,7 @@ function buildOutput(){
   o+=`VESSEL NAME          : "${v('vessel-name')||'[VESSEL NAME]'}"\n`;
   o+=`MANUFACTURER         : ${v('maker')||'[MANUFACTURER]'}\n`;
   o+=`HULL ID NUMBER       : ${v('hin')||'[HIN]'}\n`;
-  o+=`REGISTRATION NUMBER  : ${v('reg')||'[REG #]'}\n`;
+  o+=`${getRegLabel().toUpperCase()}  : ${v('reg')||'[REG #]'}\n`;
   o+=`VESSEL TYPE          : ${v('vtype-desc')||'[VESSEL TYPE]'}\n`;
   o+=`HULL TYPE            : ${v('hull-type')||'[HULL TYPE]'}\n`;
   o+=`MODEL                : ${v('model')||'[MODEL]'}\n`;
@@ -24279,7 +24324,7 @@ function buildOutput(){
   o+=hr()+'\nSCOPE OF SURVEY\n'+hr()+'\n\n';
   o+=`The previously mentioned vessel was surveyed for ${v('survey-type').toLowerCase()} on ${date}, ${v('inspect-cond')||'ashore only'} at ${v('survey-loc')||'[LOCATION]'}. `;
   o+=st==='Performed'?'A sea trial was performed.':st==='Scheduled separately'?'A sea trial is scheduled separately.':'No sea trial was performed.';
-  o+=` The vessel was inspected in a ${v('vessel-state')||'[STATE]'} condition. Testing of DC systems was conducted utilizing the equipped onboard batteries. Percussion sounding was performed using a lightweight plastic hammer, and moisture readings were gathered utilizing a Tramex Skipper Plus moisture meter. Weather conditions were ${v('weather')||'[WEATHER]'}. ${(v('accompanied-type','emv-condition')||'accompanied')==='unaccompanied'?v('accompanied')+' requested this inspection. I was unaccompanied.':'I was accompanied by '+(v('accompanied')||'[ACCOMPANIED BY]')+' who requested this inspection.'} This letter is my written report of that survey.`;
+  o+=` The vessel was inspected in a ${v('vessel-state')||'[STATE]'} condition. Testing of DC systems was conducted utilizing the equipped onboard batteries. Percussion sounding was performed using a lightweight plastic hammer, and moisture readings were gathered utilizing a Tramex Skipper Plus moisture meter. Weather conditions were ${v('weather')||'[WEATHER]'}. ${(v('accompanied-type','emv-condition','reg-type')||'accompanied')==='unaccompanied'?v('accompanied')+' requested this inspection. I was unaccompanied.':'I was accompanied by '+(v('accompanied')||'[ACCOMPANIED BY]')+' who requested this inspection.'} This letter is my written report of that survey.`;
   const sn=g('scope','narrative');if(sn)o+='\n\n'+sn;
   const vdesc=v('vessel-desc');if(vdesc)o+='\n\nThis vessel is further described as '+vdesc;
   o+='\n\nNOTE: Use of Red, Blue, and Green highlights in the body of this report will indicate that a recommendation will be listed in the section "COMMENTS AND RECOMMENDATIONS" pertaining to that item.\n\n';
@@ -24399,6 +24444,7 @@ async function generateDocx(){
     function h1(text) {
       return new Paragraph({
         heading:HeadingLevel.HEADING_1,
+        outlineLevel:0,
         spacing:{before:360,after:80},
         children:[new TextRun({text,font:'Arial',size:26,bold:true,color:NAVY,allCaps:true})]
       });
@@ -24406,6 +24452,7 @@ async function generateDocx(){
     function h2(text) {
       return new Paragraph({
         heading:HeadingLevel.HEADING_2,
+        outlineLevel:1,
         spacing:{before:180,after:60},
         children:[new TextRun({text,font:'Arial',size:22,bold:true,color:RULE})]
       });
@@ -24599,7 +24646,7 @@ async function generateDocx(){
         infoRow('Model', v('model')),
         infoRow('Year Built', v('year')),
         infoRow('Hull ID Number', v('hin')),
-        infoRow('Registration Number', v('reg')),
+        infoRow(getRegLabel(), v('reg')),
         infoRow('Vessel Type', v('vtype-desc')),
         infoRow('Hull Type', v('hull-type')),
         infoRow('Length Overall', v('loa')),
@@ -24721,9 +24768,9 @@ async function generateDocx(){
           new Paragraph({spacing:{before:0,after:100},
             children:[new TextRun({text:'TABLE OF CONTENTS',font:'Arial',size:28,bold:true,color:NAVY,allCaps:true})]}),
           hr(NAVY,10),sp(6),
-          new TableOfContents('Table of Contents',{hyperlink:true,headingStyleRange:'1-2'}),
+          new TableOfContents('Table of Contents',{hyperlink:true,headingStyleRange:'1-2',stylesWithLevels:[{styleName:'Heading 1',level:1},{styleName:'Heading 2',level:2}]}),
           new Paragraph({spacing:{before:120,after:0},
-            children:[new TextRun({text:'Right-click → Update Field to refresh page numbers after opening in Word.',font:'Arial',size:16,italics:true,color:'AAAAAA'})]}),
+            children:[new TextRun({text:'Right-click on this table → Update Field → Update entire table to refresh page numbers. The navigation sidebar in Word will populate automatically.',font:'Arial',size:16,italics:true,color:'AAAAAA'})]}),
 
           pb(),
 
@@ -25552,6 +25599,230 @@ async function generatePhotoDocx() {
     btn.disabled = false;
   }
 }
+
+/* ── Registration / USCG Doc # toggle ── */
+const REG_LABELS = {
+  registration: { label:'Registration #', placeholder:'NH 2588 JZ', docLabel:'Registration Number' },
+  uscg:         { label:'USCG Doc #',      placeholder:'1234567',    docLabel:'USCG Documentation Number' }
+};
+function toggleRegType(){
+  const rt = document.getElementById('reg-type');
+  const current = rt ? rt.value : 'registration';
+  const next = current === 'registration' ? 'uscg' : 'registration';
+  if(rt) rt.value = next;
+  const info = REG_LABELS[next];
+  const lbl = document.getElementById('reg-label-display');
+  const btn = document.getElementById('reg-toggle-btn');
+  const inp = document.getElementById('reg');
+  if(lbl) lbl.textContent = info.label;
+  if(btn) btn.textContent = next === 'uscg' ? 'Reg #' : 'USCG Doc #';
+  if(inp) inp.placeholder = info.placeholder;
+  autoSave();
+}
+function getRegLabel(){
+  const rt = document.getElementById('reg-type');
+  const type = rt ? rt.value : 'registration';
+  return REG_LABELS[type] ? REG_LABELS[type].docLabel : 'Registration Number';
+}
+function restoreRegType(type){
+  if(!type || !REG_LABELS[type]) return;
+  const rt = document.getElementById('reg-type');
+  if(rt) rt.value = type;
+  const info = REG_LABELS[type];
+  const lbl = document.getElementById('reg-label-display');
+  const btn = document.getElementById('reg-toggle-btn');
+  const inp = document.getElementById('reg');
+  if(lbl) lbl.textContent = info.label;
+  if(btn) btn.textContent = type === 'uscg' ? 'Reg #' : 'USCG Doc #';
+  if(inp) inp.placeholder = info.placeholder;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   QUICK-FILL CHIPS
+   Each entry: sectionId → fieldKey → array of chip labels
+   Tapping a chip fills the input and saves to state instantly.
+   ══════════════════════════════════════════════════════════════ */
+const CHIPS = {
+  hull: {
+    'hull-mat':    ['FRP — non-cored','FRP — cored foam','FRP — cored balsa','FRP — cored honeycomb','Aluminum','Cold-molded wood'],
+    'hull-sides':  ['Solid laminate — confirmed anchor locker + lazarette','Cored — closed-cell foam above WL','Cored — end-grain balsa above WL','Cored — composite honeycomb above WL'],
+    'resin-type':  ['Polyester','Vinyl ester','Vinylester','Epoxy'],
+    'frame-mat':   ['FRP tabbed bulkheads + longitudinal stringers','FRP tabbed bulkheads + aluminum frames','Welded aluminum frames and stringers'],
+    'deck-mat':    ['FRP laminate','FRP laminate — painted non-skid','FRP laminate — molded non-skid'],
+    'deck-core':   ['Marine plywood','Closed-cell PVC foam','End-grain balsa','Composite honeycomb'],
+    'htd-joint':   ['Sealant + mechanical through rub rail','Chemically bonded + mechanical at rub rail','Through-bolted + sealant'],
+    'rub-rail':    ['Rubber + SS half-round','Hard plastic + SS','Aluminum extrusion','Varnished wood toe rail'],
+    'hull-vent':   ['Natural flow-through','Powered blower — ignition protected','Louvered vents'],
+    'bilge-vent':  ['Natural flow-through','Powered blower — ignition protected'],
+    'hull-vent-mat':['Bronze','Marelon plastic','Stainless steel','Aluminum'],
+    'nonskid':     ['Molded — serviceable','Molded — worn','Painted — serviceable','Painted — worn, replacement recommended','Teak overlay — serviceable'],
+    'topsides-gen':['Serviceable — cosmetic UV oxidation','Serviceable — minor crazing consistent with age','Serviceable — post curing noted (cosmetic)','Uniform structural condition','Fair — prior repair noted'],
+    'decking-gen': ['Serviceable condition — see summary','Uniform structural condition, firm underfoot','Elevated moisture noted — see narrative'],
+    'bottom-gen':  ['Uniform structural condition','Minor osmotic blistering — gelcoat only','Moderate blistering — see narrative'],
+    'bilge-gen':   ['Dry and clean','Minor standing water — cleaning recommended','Oily residue — source to be investigated','Would benefit from routine cleaning'],
+    'seacocks':    ['All silicon bronze — operable','All Marelon plastic — operable','Mixed silicon bronze + Marelon — operable','One or more seized — see narrative'],
+    'hatches':     ['Weathertight — serviceable','Gaskets require cleaning','One or more gaskets require replacement'],
+    'portlights':  ['Fixed — serviceable','Opening — weathertight','Staining noted — rebedding recommended','NA'],
+    'cockpit-drains':['Serviceable — uniform condition','Hose condition serviceable','Kinked — see narrative'],
+    'cleats':      ['Well secured — mallet test','Backing plates present','Movement noted — backing plates recommended'],
+    'rails':       ['SS stanchions — well secured','SS rail — free of impacts','Lifelines — serviceable','Set screws showing play'],
+    'interior-gen':['Well-kept appearance, serviceable','Serviceable — consistent with age','Evidence of water intrusion — see narrative'],
+  },
+  bottom: {
+    'corr-prot':   ['Zinc sacrificial anodes','Aluminum sacrificial anodes','Magnesium anodes — salt water deficiency','Impressed current system'],
+    'anode-type':  ['Zinc','Aluminum','Magnesium'],
+    'anode-cond':  ['Serviceable — adequate remaining material','~25% consumed','~50% consumed — replacement due','~75% consumed — immediate replacement required','Like-new — recently replaced'],
+    'thru-mat':    ['Silicon bronze','Marelon plastic','Stainless steel','Molded FRP'],
+    'seacock-mat': ['Silicon bronze','Marelon plastic','Bronze ball valve','Full-bore ball valve'],
+    'seacock-cond':['Operable — exercised freely','All seacocks exercised freely','One or more stiff — see narrative','One or more seized — see narrative','No seacock equipped — deficiency'],
+    'sea-strainer':['Clean — serviceable','Marine growth present — cleaning recommended','Partially full of debris','Cap oxidized — monitoring recommended'],
+    'btm-paint':   ['Ablative antifouling — serviceable','Hard antifouling — serviceable','Worn — fresh coat recommended','No bottom paint','Barrier coat — recent'],
+    'btm-paint-cond':['Serviceable — adequate coverage','Worn — fresh coat recommended','Recently applied — even coverage','Peeling in areas — prep and reapply'],
+    'props':       ['3-bladed SS — serviceable','3-bladed bronze — serviceable','3-bladed aluminum — serviceable','4-bladed SS — serviceable','Blade damage noted — see narrative'],
+    'shafts':      ['SS — rotates freely, no pitting','Rotates freely — no crevice corrosion','Light pitting noted — monitoring recommended'],
+    'rudders':     ['FRP — percussion sounded, serviceable','Skeg-mounted FRP — serviceable','Spade rudder — serviceable','No excess bearing play'],
+    'cutlass':     ['Serviceable — no excess lateral movement','Wear noted — replacement recommended','Dry-rotted — replacement required'],
+    'shaft-seal':  ['Dripless seal — serviceable','Traditional packing gland — serviceable','Packing gland — sling pattern noted','Packing gland — leaking underway'],
+    'keel-type':   ['Fixed FRP keel','Lead ballast keel','Cast iron ballast keel','Encapsulated ballast'],
+    'keel-joint':  ['Uniform — no movement or staining','Tight — no gap or paint cracking','Staining noted — keel bolt inspection recommended'],
+    'dezinc':      ['None noted','Through-hulls — pink coloration noted','Propeller hub — pink coloration noted','Both through-hulls and propeller hub'],
+    'dynaplates':  ['Not equipped','Serviceable — exposed zinc surface','Painted over — effectiveness compromised','Structural loss from galvanic corrosion'],
+    'strut-bond':  ['Present — intact','Oxidized but intact','Oxidized and partially broken — replacement required','Not present'],
+  },
+  machinery: {
+    'eng-loc':     ['Aft on transom (outboard)','Centerline — inboard','Port and starboard — twin inboard','Forward cabin — inboard'],
+    'eng-type':    ['Outboard gasoline','Inboard gasoline','Inboard diesel — freshwater cooled','Inboard diesel — raw water cooled','Sterndrive gasoline'],
+    'drive-type':  ['Outboard','Direct drive','V-drive','IPS pod drive','Sterndrive','Saildrive'],
+    'eng-beds':    ['FRP — percussion sounded, uniform','Aluminum — serviceable','Tabbing uniform — no delamination'],
+    'fuel-lines':  ['USCG A-1','USCG A-1 and A-2','USCG A-1 — double clamped throughout'],
+    'fuel-filters':['Engine-mounted primary filter','Racor fuel/water separator — clean','Racor — sediment noted, cleaning recommended','Yamaha external filter — clean'],
+    'fuel-shutoff':['Readily accessible — operable','Located at tank — operable','Unsighted'],
+    'eng-alarms':  ['Equipped — tested, operable','Equipped — untested','Not observed'],
+    'eng-ctrl':    ['Single lever — cable shift + throttle','Twin lever — cable shift + throttle','Electronic single lever (EVC)','Dual station controls'],
+    'rev-gear':    ['NA — outboard','ZF IRM — V-drive','Twin Disc — direct drive','Hurth — direct drive','Velvet Drive'],
+    'rev-fluid':   ['Full — clean, no particulates','Full — dark, change recommended','Metallic particulates noted — see narrative','NA — outboard'],
+    'gen-cond':    ['Started readily — no deficiencies','Serviceable — minor oxidation','Generator not tested — winterized','See narrative for deficiencies'],
+    'fuel-quality':['Clean — no water or sediment','Minor sediment — cleaning recommended','Algae present — polishing required','Water in filter — immediate attention required'],
+    'dual-alt':    ['Single alternator','Dual alternators — both serviceable','Single — non-conductive boot equipped'],
+  },
+  steering: {
+    'steer-type':  ['Single helm — Sea Star hydraulic ram','Single helm — Hynautic hydraulic ram','Wire-controlled quadrant — Edson pedestal','Tiller','Electronic — Volvo EVC + joystick'],
+    'steer-sys':   ['Hydraulic','Wire/quadrant','Electronic (EVC)','Tiller'],
+    'steer-stations':['(1)','(2) — dual station','(1) + autopilot'],
+    'steer-access':['Easily accessed — lazarette + transom','Accessed from beneath helm','Partially obscured by generator','Accessed from cockpit + lazarette'],
+    'steer-ease':  ['Operable — no unusual play','Estimated 1/4 turn play — serviceable','Estimated 1/2 turn play — see narrative','Significant play — hydraulic service required'],
+    'steer-leads': ['Well led — serviceable','No weeping at fittings','Minor checking — monitoring recommended'],
+    'steer-shelf': ['Serviceable — no water intrusion','Water intrusion noted — partial degradation'],
+    'rudder-stop': ['Built-in — operable','SS rudder stop — adequate stopping power','Wooden stops — well secured'],
+    'trim-tabs':   ['Lenco — operable','Bennett — operable','Humphree — operable','Not equipped'],
+    'autopilot':   ['Raymarine — operable','Simrad — operable','Garmin — operable','Volvo Shadow Drive — integrated','Not equipped','Equipped — not tested'],
+    'bow-thr':     ['Not equipped','Operable — directional control confirmed','Decommissioned — see narrative'],
+    'pedestal':    ['Edson — serviceable, firmly affixed','Lewmar — serviceable','Fasteners oxidized — rebedding recommended'],
+  },
+  electrical: {
+    'wire-type':   ['12V DC','12V DC + 120V AC shore power','12V DC + 120V + 240V AC','12V + 24V DC','24V DC + 120V + 240V AC'],
+    'wire-cond':   ['Largely well led and secured','Well led on 18" schedule','Some unsecured runs — see narrative','Generally serviceable — see narrative for deficiencies'],
+    'panel-type':  ['Circuited DC switch panel','Circuit breaker panel — DC','Combined AC/DC circuit breaker panel','DIN Rail switchboard — AC','Separate AC and DC panels'],
+    'batt-type':   ['12V Group 27 lead acid','12V Group 31 lead acid','12V Group 31 AGM','12V Group 24 lead acid','6V lead acid (series → 12V)','6V AGM (series → 24V)','Lithium'],
+    'batt-config': ['Independent — emergency parallel','Series banks (6V → 12V)','Series then parallel (6V → 12V → parallel)','Series banks (6V → 24V)','Parallel banks'],
+    'batt-install':['Secured in electrolyte-containing bins','Nylon strapping in non-conductive bins','Non-conductive battery boxes','Acid-proof trays with strapping'],
+    'shore-pwr':   ['120V — inlet serviceable','120V + 240V — both inlets serviceable','Not equipped','Inlet condition — see narrative'],
+    'galv-iso':    ['Equipped — per ABYC A-28','Not observed — recommended','Not applicable'],
+    'dc-sys':      ['Tested — all circuits operable','Tested — deficiencies noted, see narrative','Not fully tested — winterized'],
+  },
+  tankage: {
+    'fuel-num':    ['(1) Gasoline','(1) Diesel','(2) Gasoline','(2) Diesel','(1) Gasoline + (1) diesel (generator)'],
+    'fuel-mat':    ['5052 Aluminum — rectangular','5052 Aluminum — L-shaped','Cross-linked polyethylene','Fiberglass integral','Stainless steel'],
+    'fuel-secure': ['Secured — no movement','Secured with mechanical strapping','Chocked and strapped in place'],
+    'fuel-access': ['Accessible — through lazarette','Partially accessible — overhead hatches','Largely obscured — fixed joinery','Top accessible — trailing/leading edge only'],
+    'fuel-bond':   ['Bonded','Not confirmed — obscured','Not bonded — deficiency per ABYC H-24'],
+    'fuel-cond':   ['Serviceable — no leaks or pitting','Light cosmetic corrosion — not structural','No stains, odors, or pools of fuel'],
+    'water-mat':   ['Cross-linked polyethylene','5052 Aluminum','Integral molded fiberglass','Stainless steel'],
+    'waste-mat':   ['Cross-linked polyethylene','Integral molded fiberglass','Stainless steel'],
+    'waste-cond':  ['Serviceable — no leaks or odors','Free of deformation or cracks','Odor present — see narrative'],
+    'y-valve':     ['Configured to direct to holding tank','Handle intact — operable','Y-valve lever snapped — replacement required'],
+  },
+  safety: {
+    'fire-builtin':['Not equipped','Automatic fixed system — not deployed','Automatic fixed system — discharge indicator serviceable'],
+    'fire-held':   ['(1) USCG Type B-II','(2) USCG Type B-II','(1) USCG Type B-I','(2) USCG Type B-I','Not observed — required per 33 CFR 175.15'],
+    'fire-exp':    ['Current — within service date','Expired — replacement required','Service tags current — gauges in green'],
+    'bilge-cond':  ['Operable — manual override + automatic','Tested — operable both modes','Float switch tested — activated appropriately'],
+    'hwa':         ['Not equipped — recommended per ABYC H-22','Equipped — tested, operable','NA — no enclosed accommodation'],
+    'anchor':      ['Fortress FX-11 — aluminum','CQR plow — galvanized','Delta plow — stainless','Danforth — aluminum','Rocna — galvanized'],
+    'rode':        ['Est. 5\' 3/8" chain to 100\' rope','Est. 10\' 3/8" chain to 150\' rope','All chain — 3/8"','All rope rode'],
+    'horn':        ['12V electric — operable','Manual air horn — serviceable','Not observed — required'],
+    'lifering':    ['Type IV throwable — serviceable','Type IV ring buoy — serviceable','Not observed — required 16ft+ per 33 CFR 175.10'],
+    'pfds':        ['Adequate count — all USCG approved','Type II — adequate count','Type III — adequate count','Count insufficient — see narrative'],
+    'flares':      ['Within expiration date','Expired — replacement required','Not observed'],
+    'co':          ['Equipped — tested operable','Not equipped — required per ABYC A-24','Not equipped — recommended'],
+    'smoke':       ['Equipped — serviceable','Not equipped — required per NFPA 302','Not equipped — recommended'],
+    'gfci':        ['All outlets GFCI protected','Head + galley GFCI protected — tested','Not equipped — required per ABYC E-11'],
+    'epirb':       ['EPIRB 406MHz — registration current','PLB — registration current','Battery within service date','Battery expired — recertification required','Not equipped'],
+    'navlights':   ['All lights operable — tested','Bow + stern operable — masthead failed','All lights inoperable — see narrative'],
+  },
+  electronics: {
+    'depth':       ['Transom-mounted transducer','Through-hull transducer','Dual transducers'],
+    'vhf':         ['Icom — operable CH16, DSC equipped','Standard Horizon — operable CH16, DSC equipped','Cobra — operable CH16','No DSC — recommended'],
+    'ac':          ['Operable — cooling + heating tested','Operable — cooling tested only','Not tested — winterized','Not equipped'],
+    'waterheater': ['120V + engine heated — pressure relief valve present','120V — pressure relief valve present','Engine heated — serviceable','LP — serviceable','Winterized — not tested'],
+    'batt-charger':['Operable — bulk/absorption/float cycling','Output voltage appropriate — serviceable','TC ERROR fault — see narrative'],
+    'gen':         ['See machinery section','Operable — AC loads confirmed','Not tested — winterized'],
+    'windlass':    ['Operable — up/down/free-spool confirmed','Not equipped','Not tested — vessel ashore'],
+    'inverter':    ['Equipped — operable','Not equipped','Terminal not booted — see narrative'],
+  },
+  rigging: {
+    'mast-mat':    ['Aluminum — single spreader, keel-stepped','Aluminum — double spreader, keel-stepped','Aluminum — fractional rig','Carbon fiber — keel-stepped','Deck-stepped'],
+    'mast-status': ['Stepped','Stored ashore — professionally decommissioned','Stored ashore — wrapped for winter'],
+    'st-rig-type': ['1x19 stainless steel wire + swage terminals','Rod rigging + toggle terminals','Synthetic Dyneema','Wire with mechanical terminals'],
+    'st-rig-cond': ['Serviceable — consistent with age','Approaching 10-year replacement interval','At or past 10-year interval — replacement recommended','Recently replaced'],
+    'chainplate-type':['External SS — deck-mounted','Internal — through-deck penetrations','Inboard through-bolted'],
+    'chainplate-cond':['Serviceable — no staining at penetrations','Staining at penetrations — rebedding recommended','Significant staining — rebedding required'],
+    'furler-cond': ['Harken — serviceable','Furlex — serviceable','Furling line serviceable','Furling line aged — replacement recommended'],
+    'run-rig-cond':['Serviceable — commensurate with age','Halyards recently replaced','Chafe evident — monitoring recommended'],
+    'backstay':    ['Appropriate tension','Bobstay loose — tuning required','Backstay adjuster equipped'],
+    'sails':       ['All sails serviceable — crisp condition','Mainsail + headsail — serviceable','Sails off vessel for winter storage','UV cover serviceable'],
+    'boom-cond':   ['Serviceable — no impacts','Sheaves worn — replacement recommended','Gooseneck rivets loose — refastening required'],
+  },
+};
+
+/* ── Render chip row for a given section/key ── */
+function renderChips(sid, key, currentVal) {
+  const sectionChips = CHIPS[sid];
+  if(!sectionChips) return '';
+  const chips = sectionChips[key];
+  if(!chips || !chips.length) return '';
+
+  return `<div class="chip-row" data-sid="${sid}" data-key="${key}">` +
+    chips.map(chip => {
+      const isActive = currentVal && currentVal.trim() === chip.trim();
+      return `<button type="button" class="chip${isActive?' chip-active':''}"
+        onclick="chipFill('${sid}','${key}',${JSON.stringify(chip)},this)">${chip}</button>`;
+    }).join('') +
+  `</div>`;
+}
+
+/* ── Fill input from chip tap ── */
+function chipFill(sid, key, value, btn) {
+  // Fill the input
+  const inputId = sid + '-' + key;
+  const el = document.getElementById(inputId);
+  if(el) {
+    el.value = value;
+    sv(sid, key, value);
+  }
+  // Toggle active state on chips in this row
+  const row = btn.closest('.chip-row');
+  if(row) {
+    row.querySelectorAll('.chip').forEach(c => c.classList.remove('chip-active'));
+    btn.classList.add('chip-active');
+    // If tapping active chip, clear it (toggle off)
+    if(el && el.value === value && btn.classList.contains('chip-active')) {
+      // Already set active above — second tap clears
+    }
+  }
+}
+
 /* ── Init ── */
 document.getElementById('survey-date').valueAsDate=new Date();
 document.addEventListener('DOMContentLoaded', function(){
