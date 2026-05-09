@@ -5,149 +5,717 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>McDonough Marine Survey App</title>
 <style>
+/* ── Import Fonts ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap');
+
+/* ── Design tokens ────────────────────────────────────────── */
+:root {
+  --navy:      #0F2544;
+  --navy-mid:  #1B3A6B;
+  --navy-soft: #2C5282;
+  --teal:      #0D7377;
+  --teal-soft: #14919B;
+  --teal-pale: #E0F5F5;
+  --gold:      #C9933A;
+  --gold-pale: #FDF3E3;
+  --red:       #C0392B;
+  --red-pale:  #FDECEA;
+  --green:     #1A7A4A;
+  --green-pale:#E6F6EE;
+  --sand:      #F7F5F0;
+  --sand-mid:  #EDE9E0;
+  --sand-dark: #D6D0C4;
+  --ink:       #1A1A18;
+  --ink-mid:   #4A4A46;
+  --ink-soft:  #888780;
+  --white:     #FFFFFF;
+  --radius:    12px;
+  --radius-sm: 8px;
+  --shadow:    0 2px 12px rgba(15,37,68,0.08);
+  --shadow-md: 0 4px 24px rgba(15,37,68,0.12);
+}
+
+/* ── Reset ────────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;min-height:100vh;padding:16px}
+body {
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  background: var(--sand);
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(13,115,119,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(27,58,107,0.06) 0%, transparent 60%);
+  min-height:100vh;
+  padding:16px;
+  color: var(--ink);
+}
+
+/* ── App shell ────────────────────────────────────────────── */
 .app{max-width:680px;margin:0 auto;padding:12px}
-.header{background:#fff;border:1px solid #e5e3db;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.logo-area h1{font-size:15px;font-weight:600;color:#1a1a18}
-.logo-area p{font-size:12px;color:#888780}
+
+/* ── Header ───────────────────────────────────────────────── */
+.header {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-md);
+}
+.logo-area h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--white);
+  letter-spacing: 0.01em;
+}
+.logo-area p {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  margin-top: 2px;
+}
 .header-right{display:flex;align-items:center;gap:8px}
-.file-badge{font-size:11px;background:#f1efe8;border:1px solid #d3d1c7;border-radius:8px;padding:4px 10px;color:#5f5e5a}
-.save-btn{font-size:11px;padding:4px 10px;background:#E1F5EE;border:1px solid #1D9E75;border-radius:8px;color:#0F6E56;cursor:pointer;font-family:inherit}
-.save-btn:hover{background:#c8eede}
-.save-indicator{font-size:11px;color:#1D9E75;display:none}
-.step-bar{display:flex;gap:6px;margin-bottom:12px}
-.step{flex:1;height:3px;border-radius:2px;background:#d3d1c7;transition:background 0.3s}
-.step.done{background:#1D9E75}
-.step.active{background:#378ADD}
-.card{background:#fff;border:1px solid #e5e3db;border-radius:12px;padding:16px;margin-bottom:10px}
-.card-title{font-size:13px;font-weight:600;color:#888780;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px}
+.file-badge {
+  font-size: 11px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 4px 10px;
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+}
+.save-btn {
+  font-size: 11px;
+  padding: 5px 11px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 20px;
+  color: var(--white);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.save-btn:hover{background:rgba(255,255,255,0.25)}
+.save-indicator{font-size:11px;color:rgba(255,255,255,0.7);display:none}
+
+/* ── Progress bar ─────────────────────────────────────────── */
+.step-bar{display:flex;gap:5px;margin-bottom:14px}
+.step {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--sand-dark);
+  transition: background 0.4s;
+}
+.step.done { background: var(--teal); }
+.step.active {
+  background: linear-gradient(90deg, var(--teal), var(--teal-soft));
+  box-shadow: 0 0 6px rgba(13,115,119,0.4);
+}
+
+/* ── Cards ────────────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--sand-mid);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--teal), var(--navy-soft));
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.card:focus-within::before { opacity: 1; }
+
+.card-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+
+/* ── Vessel type grid ─────────────────────────────────────── */
 .vessel-type-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.vtype{border:1px solid #e5e3db;border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;transition:all 0.15s;background:#fff}
-.vtype:hover{border-color:#b4b2a9;background:#f9f8f5}
-.vtype.selected{border:2px solid #378ADD;background:#E6F1FB}
-.vtype .icon{font-size:20px;margin-bottom:4px}
-.vtype .label{font-size:13px;font-weight:500;color:#2c2c2a}
-.vtype.selected .label{color:#185FA5}
+.vtype {
+  border: 1.5px solid var(--sand-mid);
+  border-radius: var(--radius-sm);
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s;
+  background: var(--white);
+}
+.vtype:hover {
+  border-color: var(--teal-soft);
+  background: var(--teal-pale);
+  transform: translateY(-1px);
+}
+.vtype.selected {
+  border: 2px solid var(--teal);
+  background: var(--teal-pale);
+  box-shadow: 0 0 0 3px rgba(13,115,119,0.12);
+}
+.vtype .icon{font-size:22px;margin-bottom:5px}
+.vtype .label{font-size:12px;font-weight:600;color:var(--ink-mid)}
+.vtype.selected .label{color:var(--teal)}
+
+/* ── Form fields ──────────────────────────────────────────── */
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .field-row.full{grid-template-columns:1fr}
-.field-group{display:flex;flex-direction:column;gap:4px}
-.field-label{font-size:12px;color:#888780;font-weight:500}
-input[type=text],input[type=date],select,textarea{width:100%;font-size:13px;padding:7px 10px;border:1px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;font-family:inherit;outline:none;-webkit-appearance:none;appearance:none}
-input[type=text]:focus,input[type=date]:focus,select:focus,textarea:focus{border-color:#378ADD;box-shadow:0 0 0 2px rgba(55,138,221,0.15)}
-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888780' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
-textarea{resize:vertical;min-height:80px;line-height:1.5}
-.section-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.snav-btn{font-size:12px;padding:5px 10px;border:1px solid #e5e3db;border-radius:20px;cursor:pointer;background:#fff;color:#888780;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
-.snav-btn:hover{border-color:#b4b2a9;color:#2c2c2a}
-.snav-btn.active{background:#378ADD;border-color:#378ADD;color:#fff}
-.def-badge{background:#E24B4A;color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:1px 5px;line-height:1.4}
+.field-group{display:flex;flex-direction:column;gap:5px}
+.field-label{font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:0.02em;text-transform:uppercase}
+input[type=text],input[type=date],select,textarea {
+  width: 100%;
+  font-size: 14px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--sand-mid);
+  border-radius: var(--radius-sm);
+  background: var(--sand);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+input[type=text]:focus,input[type=date]:focus,select:focus,textarea:focus {
+  border-color: var(--teal);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(13,115,119,0.12);
+}
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888780' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-color: var(--sand);
+  padding-right: 28px;
+}
+textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+}
+
+/* ── Section navigation pills ─────────────────────────────── */
+.section-nav {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.snav-btn {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border: 1.5px solid var(--sand-mid);
+  border-radius: 20px;
+  cursor: pointer;
+  background: var(--white);
+  color: var(--ink-soft);
+  transition: all 0.15s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.snav-btn:hover {
+  border-color: var(--teal-soft);
+  color: var(--teal);
+  background: var(--teal-pale);
+}
+.snav-btn.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+  box-shadow: 0 2px 8px rgba(15,37,68,0.25);
+}
+.def-badge {
+  background: var(--red);
+  color: var(--white);
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 20px;
+  padding: 1px 5px;
+  line-height: 1.4;
+}
+
+/* ── Section blocks ───────────────────────────────────────── */
 .section-block{display:none}
 .section-block.visible{display:block}
-.abbrev-table{width:100%;border-collapse:collapse;margin-bottom:10px}
-.abbrev-table td{font-size:13px;padding:6px 8px;border-bottom:1px solid #f1efe8;vertical-align:middle}
-.abbrev-table td:first-child{color:#888780;width:44%;font-size:12px;font-weight:500}
-.abbrev-table td:last-child input{width:100%;font-size:13px;padding:5px 8px;border:1px solid #e5e3db;border-radius:6px;background:#fff;color:#1a1a18;font-family:inherit;outline:none;-webkit-appearance:none}
-.abbrev-table td:last-child input:focus{border-color:#378ADD;box-shadow:0 0 0 2px rgba(55,138,221,0.12)}
-.subhead{font-size:11px;color:#888780;font-weight:600;letter-spacing:0.03em;margin:12px 0 6px}
-.voice-row{display:flex;gap:6px;align-items:flex-start}
-.voice-row textarea{flex:1}
-.mic-btn{width:36px;height:36px;min-width:36px;border:1px solid #d3d1c7;border-radius:8px;background:#f1efe8;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s;padding:0}
-.mic-btn:hover{border-color:#378ADD;background:#E6F1FB}
-.mic-btn.recording{background:#FCEBEB;border-color:#E24B4A;animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
-.rec-row{display:flex;align-items:center;gap:8px;margin-top:4px;min-height:14px}
-.rec-dot{width:7px;height:7px;border-radius:50%;background:#E24B4A;display:none}
-.rec-dot.active{display:block;animation:pulse 1s infinite}
-.rec-label{font-size:11px;color:#888780}
-.cue-bar{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;padding:8px 10px;background:#faf9f7;border:1px solid #ede9e0;border-radius:8px;transition:opacity 0.3s}
-.cue-bar.dimmed{opacity:0.28}
-.cue{font-size:11px;color:#6b6a65;background:#f1efe8;border:1px solid #dbd9d1;border-radius:20px;padding:2px 8px;white-space:nowrap;user-select:none}
-.cue-hdr{font-size:10px;color:#b4b2a9;font-weight:600;letter-spacing:0.05em;align-self:center;margin-right:2px;white-space:nowrap}
-/* Pin strip */
-.pin-strip{display:flex;gap:6px;align-items:flex-start;margin-top:10px;padding:10px;background:#faf9f7;border:1px solid #ede9e0;border-radius:8px;flex-wrap:wrap}
-.pin-strip select{width:auto;font-size:12px;padding:6px 26px 6px 8px;border-radius:6px;flex:0 0 auto}
-.pin-strip input{flex:1;min-width:140px;font-size:12px;padding:6px 8px;border:1px solid #d3d1c7;border-radius:6px;background:#fff;color:#1a1a18;font-family:inherit;outline:none;-webkit-appearance:none}
-.pin-strip input:focus{border-color:#378ADD}
-.pin-strip input::placeholder{color:#b4b2a9}
-.pin-btn{font-size:12px;padding:6px 12px;border:1px solid #d3d1c7;border-radius:6px;background:#fff;color:#1a1a18;cursor:pointer;white-space:nowrap;flex:0 0 auto}
-.pin-btn:hover{border-color:#378ADD;color:#185FA5;background:#ebf4ff}
-.std-btn{font-size:12px;padding:6px 10px;border:1px solid #BA7517;border-radius:6px;background:#FAEEDA;color:#854F0B;cursor:pointer;white-space:nowrap;flex:0 0 auto;font-family:inherit}
-.std-btn:hover{background:#f5d99a}
-/* Standards modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
-.modal-overlay.hidden{display:none}
-.modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:680px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
-.modal-header{padding:14px 16px;border-bottom:1px solid #e5e3db;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.modal-header h3{font-size:14px;font-weight:600;color:#1a1a18}
-.modal-close{font-size:22px;color:#b4b2a9;cursor:pointer;line-height:1;padding:0 4px}
-.modal-close:hover{color:#E24B4A}
-.modal-search{padding:10px 16px;border-bottom:1px solid #f1efe8;flex-shrink:0}
-.modal-search input{width:100%;font-size:13px;padding:8px 12px;border:1px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;font-family:inherit;outline:none}
-.modal-search input:focus{border-color:#378ADD}
-.modal-cats{display:flex;gap:6px;padding:8px 16px;overflow-x:auto;border-bottom:1px solid #f1efe8;flex-shrink:0}
-.cat-btn{font-size:11px;padding:4px 10px;border:1px solid #e5e3db;border-radius:20px;cursor:pointer;background:#fff;color:#888780;white-space:nowrap;flex-shrink:0}
-.cat-btn:hover{border-color:#b4b2a9}
-.cat-btn.active{background:#378ADD;border-color:#378ADD;color:#fff}
-.modal-results{flex:1;overflow-y:auto;padding:8px 16px}
-.std-item{padding:10px 0;border-bottom:1px solid #f1efe8;cursor:pointer}
-.std-item:hover .std-item-inner{background:#f5f9ff;border-radius:8px}
-.std-item-inner{padding:8px 10px;transition:background 0.1s}
-.std-code{font-size:11px;font-weight:700;color:#BA7517;margin-bottom:2px}
-.std-title{font-size:13px;font-weight:500;color:#1a1a18;margin-bottom:3px}
-.std-text{font-size:12px;color:#5f5e5a;line-height:1.5;font-style:italic}
-.std-item:last-child{border-bottom:none}
-.no-results{font-size:13px;color:#b4b2a9;padding:16px 0;text-align:center}
-/* Def items */
-.def-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;padding:8px 10px;background:#f9f8f5;border-radius:8px;border-left:3px solid #E24B4A}
-.def-item.blue-item{border-left-color:#378ADD}
-.def-item.green-item{border-left-color:#639922}
-.def-meta{font-size:10px;font-weight:700;color:#b4b2a9;min-width:46px;padding-top:2px;line-height:1.4}
-.def-body{flex:1}
-.def-text{font-size:13px;color:#1a1a18;line-height:1.5}
-.def-src{font-size:10px;color:#b4b2a9;margin-top:2px}
-.def-remove{font-size:18px;color:#d3d1c7;cursor:pointer;line-height:1;padding:0 2px}
-.def-remove:hover{color:#E24B4A}
-.nav-btns{display:flex;gap:8px;margin-top:14px}
-.btn-primary{flex:1;padding:10px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}
-.btn-primary:hover{background:#0C447C}
-.btn-secondary{padding:10px 16px;background:#f1efe8;color:#1a1a18;border:1px solid #d3d1c7;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit}
-.btn-secondary:hover{border-color:#b4b2a9}
-.output-box{background:#f9f8f5;border:1px solid #e5e3db;border-radius:8px;padding:14px;font-size:12px;color:#1a1a18;white-space:pre-wrap;line-height:1.7;max-height:440px;overflow-y:auto;font-family:'Courier New',monospace}
-.copy-btn{font-size:12px;padding:6px 14px;border:1px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;cursor:pointer;margin-bottom:8px}
-.copy-btn:hover{border-color:#378ADD;color:#185FA5}
-.screen{display:none}
-.screen.active{display:block}
-.empty-note{font-size:13px;color:#b4b2a9;padding:8px 0}
-.restore-banner{background:#EAF3DE;border:1px solid #639922;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.restore-banner p{font-size:13px;color:#3B6D11}
-.restore-banner button{font-size:12px;padding:5px 12px;border:1px solid #639922;border-radius:6px;background:#fff;color:#3B6D11;cursor:pointer;white-space:nowrap;font-family:inherit}
 
-.chip-row {
+/* ── Abbreviated summary table ────────────────────────────── */
+.abbrev-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--sand-mid);
+}
+.abbrev-table td {
+  font-size: 13px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--sand-mid);
+  vertical-align: top;
+}
+.abbrev-table tr:last-child td { border-bottom: none; }
+.abbrev-table tr:nth-child(even) td { background: var(--sand); }
+.abbrev-table td:first-child {
+  color: var(--ink-mid);
+  width: 42%;
+  font-size: 12px;
+  font-weight: 600;
+  padding-top: 11px;
+}
+.abbrev-table td:last-child input {
+  width: 100%;
+  font-size: 13px;
+  padding: 6px 9px;
+  border: 1.5px solid var(--sand-mid);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.abbrev-table td:last-child input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 2px rgba(13,115,119,0.12);
+}
+.subhead {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 14px 0 7px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.subhead::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--sand-mid);
+}
+
+/* ── Narrative field ──────────────────────────────────────── */
+.narrative-card {
+  background: linear-gradient(135deg, rgba(13,115,119,0.03) 0%, rgba(15,37,68,0.03) 100%);
+  border: 1.5px solid rgba(13,115,119,0.2);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-top: 6px;
+}
+.narrative-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--teal);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.narrative-label::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: var(--teal);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.voice-row{display:flex;gap:8px;align-items:flex-start}
+.voice-row textarea {
+  flex: 1;
+  min-height: 160px;
+  font-size: 15px;
+  line-height: 1.7;
+  padding: 12px 14px;
+  border: 1.5px solid rgba(13,115,119,0.25);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: inset 0 2px 8px rgba(13,115,119,0.04);
+  resize: vertical;
+}
+.voice-row textarea:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(13,115,119,0.12), inset 0 2px 8px rgba(13,115,119,0.04);
+  background: var(--white);
+}
+.mic-btn {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border: 1.5px solid var(--sand-mid);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.15s;
+  padding: 0;
+  box-shadow: var(--shadow);
+}
+.mic-btn:hover {
+  border-color: var(--teal);
+  background: var(--teal-pale);
+  transform: scale(1.05);
+}
+.mic-btn.recording {
+  background: var(--red-pale);
+  border-color: var(--red);
+  animation: pulse 1s infinite;
+  box-shadow: 0 0 0 3px rgba(192,57,43,0.15);
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.rec-row{display:flex;align-items:center;gap:8px;margin-top:5px;min-height:16px}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:var(--red);display:none}
+.rec-dot.active{display:block;animation:pulse 1s infinite}
+.rec-label{font-size:11px;color:var(--ink-soft)}
+
+/* ── Cue chips ────────────────────────────────────────────── */
+.cue-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  padding: 5px 0 7px 0;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(201,147,58,0.06), rgba(253,243,227,0.8));
+  border: 1px solid rgba(201,147,58,0.25);
+  border-radius: var(--radius-sm);
+  transition: opacity 0.3s;
+}
+.cue-bar.dimmed{opacity:0.25}
+.cue {
+  font-size: 11px;
+  color: var(--gold);
+  background: var(--gold-pale);
+  border: 1px solid rgba(201,147,58,0.3);
+  border-radius: 20px;
+  padding: 3px 9px;
+  white-space: nowrap;
+  user-select: none;
+  font-weight: 500;
+}
+.cue-hdr {
+  font-size: 10px;
+  color: rgba(201,147,58,0.6);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  align-self: center;
+  margin-right: 2px;
+  white-space: nowrap;
+}
+
+/* ── Pin strip ────────────────────────────────────────────── */
+.pin-strip {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin-top: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(192,57,43,0.04), rgba(253,236,234,0.6));
+  border: 1px solid rgba(192,57,43,0.2);
+  border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+}
+.pin-strip select {
+  width: auto;
+  font-size: 12px;
+  padding: 6px 26px 6px 8px;
+  border-radius: 6px;
+  flex: 0 0 auto;
+  background-color: var(--white);
+  border-color: rgba(192,57,43,0.3);
+}
+.pin-strip input {
+  flex: 1;
+  min-width: 140px;
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 1.5px solid rgba(192,57,43,0.25);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  -webkit-appearance: none;
+}
+.pin-strip input:focus{border-color:var(--red);box-shadow:0 0 0 2px rgba(192,57,43,0.1)}
+.pin-strip input::placeholder{color:var(--ink-soft)}
+.pin-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border: 1.5px solid var(--red);
+  border-radius: 6px;
+  background: var(--red-pale);
+  color: var(--red);
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.pin-btn:hover{background:var(--red);color:var(--white)}
+.std-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border: 1.5px solid rgba(201,147,58,0.5);
+  border-radius: 6px;
+  background: var(--gold-pale);
+  color: var(--gold);
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.std-btn:hover{background:var(--gold);color:var(--white)}
+
+/* ── Standards modal ──────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,37,68,0.55);z-index:1000;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
+.modal-overlay.hidden{display:none}
+.modal{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-width:680px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 40px rgba(15,37,68,0.2)}
+.modal-header{padding:16px 18px 14px;border-bottom:1px solid var(--sand-mid);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-header h3{font-family:'DM Serif Display',serif;font-size:16px;font-weight:400;color:var(--navy)}
+.modal-close{font-size:24px;color:var(--ink-soft);cursor:pointer;line-height:1;padding:0 4px;transition:color 0.15s}
+.modal-close:hover{color:var(--red)}
+.modal-search{padding:12px 18px;border-bottom:1px solid var(--sand-mid);flex-shrink:0}
+.modal-search input{width:100%;font-size:14px;padding:9px 14px;border:1.5px solid var(--sand-mid);border-radius:var(--radius-sm);background:var(--sand);color:var(--ink);font-family:'DM Sans',sans-serif;outline:none}
+.modal-search input:focus{border-color:var(--teal);background:var(--white);box-shadow:0 0 0 2px rgba(13,115,119,0.12)}
+.modal-cats{display:flex;gap:6px;padding:10px 18px;overflow-x:auto;border-bottom:1px solid var(--sand-mid);flex-shrink:0}
+.cat-btn{font-size:11px;font-weight:600;padding:5px 12px;border:1.5px solid var(--sand-mid);border-radius:20px;cursor:pointer;background:var(--white);color:var(--ink-soft);white-space:nowrap;flex-shrink:0;transition:all 0.15s}
+.cat-btn:hover{border-color:var(--teal-soft);color:var(--teal)}
+.cat-btn.active{background:var(--navy);border-color:var(--navy);color:var(--white)}
+.modal-results{flex:1;overflow-y:auto;padding:10px 18px}
+.std-item{padding:10px 0;border-bottom:1px solid var(--sand-mid);cursor:pointer}
+.std-item:hover .std-item-inner{background:var(--teal-pale);border-radius:8px}
+.std-item-inner{padding:8px 10px;transition:background 0.1s}
+.std-code{font-size:11px;font-weight:700;color:var(--teal);margin-bottom:3px;letter-spacing:0.02em}
+.std-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.std-text{font-size:12px;color:var(--ink-mid);line-height:1.5}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(15,37,68,0.25);
+  letter-spacing: 0.01em;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(15,37,68,0.3);
+}
+.btn-primary:active {transform:translateY(0)}
+.btn-secondary {
+  padding: 11px 20px;
+  background: var(--white);
+  color: var(--navy);
+  border: 1.5px solid var(--sand-mid);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-secondary:hover{border-color:var(--navy);background:var(--sand)}
+.nav-btns{display:flex;gap:10px;margin-top:16px;align-items:center}
+.copy-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border: 1.5px solid var(--sand-mid);
+  border-radius: 20px;
+  background: var(--white);
+  color: var(--ink-mid);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  margin-bottom: 10px;
+}
+.copy-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-pale)}
+
+/* ── Output box ───────────────────────────────────────────── */
+.output-box {
+  background: var(--sand);
+  border: 1px solid var(--sand-mid);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-mid);
+  white-space: pre-wrap;
+  max-height: 320px;
+  overflow-y: auto;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Deficiency list ──────────────────────────────────────── */
+.def-list{margin-top:10px}
+.def-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid transparent;
+}
+.def-item.red {
+  background: var(--red-pale);
+  border-color: rgba(192,57,43,0.2);
+  color: var(--red);
+}
+.def-item.blue {
+  background: #EEF4FF;
+  border-color: rgba(27,86,219,0.2);
+  color: #1A56DB;
+}
+.def-item.green {
+  background: var(--green-pale);
+  border-color: rgba(26,122,74,0.2);
+  color: var(--green);
+}
+.def-item .def-pri {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.def-item.red .def-pri{background:var(--red);color:var(--white)}
+.def-item.blue .def-pri{background:#1A56DB;color:var(--white)}
+.def-item.green .def-pri{background:var(--green);color:var(--white)}
+.def-item .def-text{flex:1}
+.def-item .def-sec{font-size:11px;opacity:0.7;margin-left:4px}
+.def-rm{background:none;border:none;color:inherit;opacity:0.5;cursor:pointer;font-size:16px;padding:0;line-height:1;flex-shrink:0;margin-top:-1px}
+.def-rm:hover{opacity:1}
+
+/* ── Restore banners ──────────────────────────────────────── */
+.restore-banner {
+  background: linear-gradient(135deg, var(--teal-pale), rgba(13,115,119,0.08));
+  border: 1.5px solid rgba(13,115,119,0.3);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.restore-banner p{font-size:13px;color:var(--teal);font-weight:500}
+.restore-banner button {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+/* ── Boilerplate modal ────────────────────────────────────── */
+#bp-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,37,68,0.55);
+  z-index: 1001;
+  align-items: flex-end;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+#bp-modal > div {
+  border-radius: 20px 20px 0 0 !important;
+  box-shadow: 0 -8px 40px rgba(15,37,68,0.2) !important;
+}
+
+/* ── Report manager modal ─────────────────────────────────── */
+#report-mgr-modal {
+  backdrop-filter: blur(2px);
+}
+
+/* ── Quick-fill chips (abbrev table) ──────────────────────── */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 0 4px 0;
 }
 .chip {
   font-size: 11px;
-  font-family: inherit;
-  padding: 3px 9px;
-  background: #f0f4fa;
-  color: #2C5282;
-  border: 1px solid #c8d8f0;
-  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  padding: 3px 10px;
+  background: var(--teal-pale);
+  color: var(--teal);
+  border: 1px solid rgba(13,115,119,0.25);
+  border-radius: 20px;
   cursor: pointer;
   white-space: nowrap;
-  line-height: 1.4;
-  transition: background 0.1s, color 0.1s;
+  line-height: 1.5;
+  transition: all 0.12s;
 }
 .chip:active, .chip-active {
-  background: #1B3A6B;
-  color: #fff;
-  border-color: #1B3A6B;
+  background: var(--teal);
+  color: var(--white);
+  border-color: var(--teal);
+  box-shadow: 0 2px 6px rgba(13,115,119,0.3);
+}
+.chip:hover:not(.chip-active) {
+  background: rgba(13,115,119,0.12);
+  border-color: var(--teal);
 }
 
+/* ── Screen ───────────────────────────────────────────────── */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ── Profiles card ────────────────────────────────────────── */
+#profile-list > div {
+  transition: transform 0.1s;
+}
+#profile-list > div:hover {
+  transform: translateX(2px);
+}
 </style>
 </head>
 <body>
@@ -156,12 +724,12 @@ textarea{resize:vertical;min-height:80px;line-height:1.5}
 <div id="restore-banner" class="restore-banner" style="display:none">
   <p>📋 Saved report found. Resume where you left off?</p>
   <div style="display:flex;gap:6px">
-    <button onclick="restoreData()">Restore</button>
-    <button onclick="dismissRestore()" style="background:#f9f8f5;color:#888780;border-color:#d3d1c7">Start fresh</button>
+    <button onclick="restoreData()" style="background:var(--teal);color:#fff;border:1px solid var(--teal);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Restore</button>
+    <button onclick="dismissRestore()" style="background:var(--white);color:var(--ink-soft);border:1px solid var(--sand-mid);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Start fresh</button>
   </div>
 </div>
-<div id="local-file-banner" style="display:none;background:#FEF3CD;border:1px solid #E6A817;border-radius:8px;padding:10px 14px;margin-bottom:12px;">
-  <p style="font-size:13px;color:#7A5200;margin:0;">⚠️ <strong>Running from local file</strong> — data will not be saved between sessions on this device. For full save/restore functionality, open this file through a browser or host it online.</p>
+<div id="local-file-banner" style="display:none;background:var(--gold-pale);border:1.5px solid rgba(201,147,58,0.4);border-radius:8px;padding:10px 14px;margin-bottom:12px;">
+  <p style="font-size:13px;color:var(--gold);margin:0;font-weight:500;">⚠️ <strong>Running from local file</strong> — data will not be saved between sessions on this device. For full save/restore functionality, open this file through a browser or host it online.</p>
 </div>
 
 <div class="header">
@@ -314,7 +882,7 @@ textarea{resize:vertical;min-height:80px;line-height:1.5}
       <div class="field-label">Additional scope notes</div>
       <div style="margin-bottom:5px;"><button onclick="prefillNarrative('scope')" style="font-size:12px;padding:4px 10px;background:#E8F0FB;color:#1B3A6B;border:1px solid #b8d0ef;border-radius:5px;cursor:pointer;">📝 Pre-fill template</button></div>
       <div class="voice-row">
-        <textarea id="scope-notes" placeholder="Winter cover limited access to transom / outboard well. Engine cowling not removed. AC systems scheduled for dockside testing..." oninput="autoSave()"></textarea>
+        <textarea id="scope-notes" rows="8" placeholder="Winter cover limited access to transom / outboard well. Engine cowling not removed. AC systems scheduled for dockside testing..." oninput="autoSave()"></textarea>
         <button class="mic-btn" onclick="toggleVoice('scope-notes',this)">🎤</button>
         <button class="mic-btn" onclick="openBoilerplate('scope')" title="Boilerplate">📄</button>
       </div>
@@ -23620,9 +24188,7 @@ function goTo(n){
 /* ── Section definitions with upgraded cues from real narratives ── */
 const SECS_POWER=[
   {id:'hull',label:'Hull & Deck',
-   abbrev:[['Hull material','hull-mat'],['Hull sides (cored/solid)','hull-sides'],['Resin type','resin-type'],
-    ['Framing material','frame-mat'],['Decking material','deck-mat'],['Deck core material','deck-core'],
-    ['Bulkheads','bulkheads'],['Hull-to-deck joint','htd-joint'],['Rub rail / toe rail / spray rail','rub-rail'],
+   abbrev:[['Hull material','hull-mat'],['Framing material','frame-mat'],['Decking material','deck-mat'],['Bulkheads','bulkheads'],['Hull-to-deck joint','htd-joint'],['Rub rail / toe rail / spray rail','rub-rail'],
     ['Hull ventilation','hull-vent'],['Hull vent material','hull-vent-mat'],['Bilge ventilation','bilge-vent'],
     ['General condition of topsides','topsides-gen'],['General condition of decking','decking-gen'],
     ['Non-skid condition','nonskid'],['General condition of bottom','bottom-gen'],
@@ -23686,10 +24252,10 @@ const SECS_POWER=[
     ['Anode locations','anode-loc'],['Anode condition','anode-cond'],
     ['Below-WL through-hull fittings','bwl-thrus'],['Through-hull material','thru-mat'],
     ['Seacock material','seacock-mat'],['Seacock condition','seacock-cond'],
-    ['Sea strainer condition','sea-strainer'],['Strut bonding wires','strut-bond'],['De-zincification noted','dezinc'],['Dynaplates condition','dynaplates'],
+    ['Sea strainer condition','sea-strainer'],['Strut bonding wires','strut-bond'],
     ['Bottom paint type','btm-paint'],['Bottom paint condition','btm-paint-cond'],
     ['Propeller(s)','props'],['Shaft(s)','shafts'],['Rudder(s)','rudders'],
-    ['Cutlass bearing(s)','cutlass'],['Keel type','keel-type'],['Keel joint condition','keel-joint'],
+    ['Cutlass bearing(s)','cutlass'],['Keel joint condition','keel-joint'],
     ['Shaft seal / packing gland','shaft-seal']],
    narrative:true,
    cues:[
@@ -24024,6 +24590,719 @@ function getSecs(){
   return s;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   QUICK-FILL CHIPS
+   Each entry: sectionId → fieldKey → array of chip labels
+   Tapping a chip fills the input and saves to state instantly.
+   ══════════════════════════════════════════════════════════════ */
+const CHIPS = {
+  hull: {
+    'hull-mat':    [
+      'Hand laid fiberglass reinforced plastic laminates, comprising of alternate layers of fiberglass mat and woven roving, saturated in polyester resin',
+      'Hand laid fiberglass reinforced plastic laminates, comprising of alternate layers of fiberglass mat and woven roving, saturated in vinyl ester resin',
+      'Knitted biaxial E-glass fiberglass reinforced plastic laminates, saturated in vinylester resin',
+      'Hand laid fiberglass reinforced plastic laminates, comprising of alternating layers of woven and biaxial roving, saturated in polyester resin',
+      'Welded marine grade aluminum',
+      'Cold-molded wood — epoxy saturated laminate',
+    ],
+    'frame-mat':   [
+      'Glass tabbed bulkheads, longitudinal stringers, structural members, engine beds and fittings',
+      'Glass tabbed aluminum frames, longitudinal stringers and structural members',
+      'Welded aluminum frames and longitudinal stringers',
+    ],
+    'deck-mat':    [
+      'Fiberglass reinforced plastic laminates with a closed-cell foam core material',
+      'Fiberglass reinforced plastic laminates with a marine grade plywood core material',
+      'Fiberglass reinforced plastic laminates with an end-grain balsa core material',
+      'Fiberglass reinforced plastic laminates with a composite honeycomb core material',
+      'Solid fiberglass reinforced plastic laminates — non-cored',
+    ],
+    'htd-joint':   [
+      'Mechanically fastened and sealed with a marine grade bedding compound through the rub rail',
+      'Chemically bonded and mechanically fastened through the rub rail',
+      'Through-bolted and bedded with a marine grade sealant/adhesive compound',
+    ],
+    'rub-rail':    [
+      'Rubber and stainless steel half-round rub rail',
+      'Hard plastic and stainless steel rub rail',
+      'Aluminum extrusion rub rail',
+      'Varnished wood toe rail',
+      'Molded fiberglass and stainless steel spray rail',
+    ],
+    'hull-vent':   [
+      'Natural flow-through ventilation',
+      'Powered blower — ignition protected per ABYC H-2',
+      'Louvered hull ventilation',
+    ],
+    'bilge-vent':  [
+      'Natural flow-through ventilation',
+      'Powered bilge blower — ignition protected per ABYC H-2',
+    ],
+    'hull-vent-mat':['Silicon bronze','Marelon plastic','Stainless steel','Aluminum'],
+    'nonskid':     [
+      'Original molded non-skid surface — serviceable, adequate grip underfoot',
+      'Original molded non-skid surface — worn, adequate grip underfoot',
+      'Original painted non-skid surface — serviceable, adequate grip underfoot',
+      'Painted non-skid — worn, replacement recommended',
+      'Teak overlay — serviceable',
+    ],
+    'topsides-gen':[
+      'Uniform structural condition, free of obvious deformities or signs of consequential prior repairs',
+      'Serviceable — cosmetic post curing noted, not of structural significance',
+      'Serviceable — minor gelcoat crazing consistent with age and UV exposure',
+      'Serviceable — cosmetic scuffing consistent with age and use',
+      'Prior repair noted — see narrative',
+    ],
+    'decking-gen': [
+      'Uniform structural condition, firm underfoot — percussion sounding revealed no deficiencies',
+      'Serviceable — elevated moisture noted in areas, see narrative',
+      'Near perfect condition, firm underfoot, free of chips or gelcoat deficiencies',
+    ],
+    'bottom-gen':  [
+      'Uniform structural condition — see bottom section',
+      'Minor osmotic blistering — gelcoat variety, not penetrating structural laminate',
+      'Moderate osmotic blistering — see narrative',
+      'Vessel inspected afloat — bottom not available for direct inspection',
+    ],
+    'bilge-gen':   [
+      'Dry and clean, free of standing water, oil accumulation, or fuel odors',
+      'Minor standing water — routine cleaning recommended',
+      'Oily residue present — source to be investigated',
+      'Would benefit from routine cleaning and inspection',
+    ],
+    'seacocks':    [
+      'All seacocks exercised freely and appeared in serviceable condition',
+      'All silicon bronze seacocks — exercised freely, serviceable',
+      'All Marelon plastic seacocks — exercised freely, serviceable',
+      'Mixed silicon bronze and Marelon — all exercised freely, serviceable',
+      'One or more seacocks stiff or seized — see narrative',
+    ],
+    'hatches':     [
+      'All hatches appeared weathertight to the vessel interior',
+      'Gaskets require cleaning to ensure weathertight seal',
+      'One or more hatch gaskets require replacement',
+    ],
+    'portlights':  [
+      'Fixed portlights — serviceable',
+      'Opening portlights — weathertight, serviceable',
+      'Staining noted beneath ports — rebedding recommended',
+      'Not applicable',
+    ],
+    'cockpit-drains':[
+      'Cockpit drain hoses in serviceable condition, free of age-related wear',
+      'Cockpit drain hoses serviceable — one or more fittings require tightening',
+      'Kinked or restricted — see narrative',
+    ],
+    'cleats':      [
+      'All cleats and deck fastenings well secured — mallet test, no movement',
+      'Backing plates present throughout',
+      'Movement noted at one or more fastenings — additional backing plates recommended',
+    ],
+    'rails':       [
+      'Stainless steel stanchions and lifelines — well secured, serviceable',
+      'Stainless steel rail — free of prior impacts, well secured',
+      'Lifelines serviceable — nylon covers present, removal recommended to inspect wire',
+      'Stanchion set screws showing play — retightening recommended',
+    ],
+    'interior-gen':[
+      'Well-kept interior, consistent with the vessel\'s age and service history',
+      'Serviceable — consistent with age and use',
+      'Evidence of water intrusion noted — see narrative',
+      'White mold noted on joinery — cleaning and ventilation improvement recommended',
+    ],
+    'windshield':  [
+      'Windshield and fixed ports serviceable, weathertight',
+      'Fixed port gaskets deteriorated — rebedding recommended',
+      'Windshield gasket in poor condition — rebedding recommended',
+      'Sliding ports weathertight, serviceable',
+    ],
+    'mach-spaces': [
+      'Machinery spaces in serviceable condition',
+      'Would benefit from routine cleaning',
+      'Oily residue noted — source to be investigated',
+    ],
+  },
+  bottom: {
+    'corr-prot':   [
+      'Zinc sacrificial anodes',
+      'Aluminum sacrificial anodes',
+      'Magnesium anodes — not appropriate for salt water use, replacement required',
+      'Impressed current system',
+    ],
+    'anode-type':  ['Zinc','Aluminum','Magnesium'],
+    'anode-cond':  [
+      'Serviceable — adequate remaining material, continue monitoring',
+      'Like-new — recently replaced',
+      'Approximately 25% consumed — serviceable, continue monitoring',
+      'Approximately 50% consumed — replacement recommended',
+      'Approximately 75% consumed — replacement required prior to launch',
+      'Depleted — immediate replacement required',
+    ],
+    'thru-mat':    ['Silicon bronze','Marelon plastic','Stainless steel','Molded fiberglass'],
+    'seacock-mat': [
+      'Silicon bronze full-bore ball seacocks',
+      'Marelon plastic full-bore ball seacocks',
+      'Mixed silicon bronze and Marelon plastic seacocks',
+      'Bronze ball valve — no seacock equipped, deficiency per ABYC H-27',
+    ],
+    'seacock-cond':[
+      'All seacocks exercised freely and appeared in serviceable condition',
+      'All seacocks exercised freely — handles operable, position clearly marked',
+      'One or more seacocks stiff, requiring additional leverage to fully close — service required',
+      'One or more seacocks seized — replacement required prior to service',
+      'Seacock handles installed in non-ergonomic orientation — repositioning recommended',
+      'Seacock without handle equipped — handle installation required per ABYC H-27',
+    ],
+    'sea-strainer':[
+      'Clean — serviceable',
+      'Marine growth present — cleaning recommended',
+      'Partially full of debris — cleaning recommended',
+      'Cap oxidized — inspection and monitoring recommended',
+    ],
+    'btm-paint':   [
+      'Ablative antifouling — serviceable, adequate coverage remaining',
+      'Hard antifouling — serviceable',
+      'Bottom paint worn — fresh coat recommended at next haul-out',
+      'No bottom paint equipped',
+      'Epoxy barrier coat — recently applied',
+    ],
+    'btm-paint-cond':[
+      'Serviceable — adequate coverage',
+      'Worn — fresh coat recommended',
+      'Recently and evenly applied',
+      'Peeling in areas — surface preparation and reapplication recommended',
+    ],
+    'props':       [
+      '3-bladed stainless steel propeller — serviceable, blades free of damage',
+      '3-bladed bronze propeller — serviceable, blades free of damage',
+      '3-bladed aluminum propeller — serviceable',
+      '4-bladed stainless steel propeller — serviceable',
+      'Blade damage noted — see narrative',
+    ],
+    'shafts':      [
+      'Stainless steel shaft — rotates freely, free of crevice corrosion or pitting',
+      'Rotates freely by hand — no crevice corrosion or signs of wastage',
+      'Light surface pitting noted — monitoring recommended',
+    ],
+    'rudders':     [
+      'FRP skeg-mounted rudder — percussion sounded, serviceable, no excess bearing play',
+      'FRP spade rudder — serviceable, no excess bearing play',
+      'Stainless steel skeg-mounted rudder — serviceable, well secured when jostled',
+      'No excess bearing play noted — cutlass bearing serviceable',
+    ],
+    'cutlass':     [
+      'Serviceable — no excess lateral movement noted when shaft jostled',
+      'Wear indicated by lateral movement — replacement recommended',
+      'Dry-rotted and aged — replacement required despite no excess movement',
+    ],
+    'shaft-seal':  [
+      'Dripless shaft seal — bellows serviceable, no sling pattern noted',
+      'Dripless shaft seal — sling pattern noted, monitoring recommended',
+      'Traditional packing gland — serviceable, acceptable drip rate',
+      'Traditional packing gland — adjustment or repacking required',
+      'Traditional packing gland — leaking steadily underway, repacking required',
+    ],
+    'keel-joint':  [
+      'Keel-to-hull connection uniform — free of movement, gaps, or staining',
+      'Keel joint tight — no paint cracking along joint line or keel bolt staining',
+      'Staining noted at keel joint — keel bolt inspection recommended',
+    ],
+    'strut-bond':  [
+      'Strut bonding wires present and intact',
+      'Strut bonding wires present — minor oxidation, monitoring recommended',
+      'Strut bonding wires heavily oxidized or broken — replacement required per ABYC E-2',
+      'Strut bonding wires not present',
+    ],
+  },
+  machinery: {
+    'eng-loc':     [
+      'Aft on transom — outboard',
+      'Centerline — single inboard',
+      'Port and starboard — twin inboard',
+      'Forward in cabin — inboard',
+    ],
+    'eng-type':    [
+      'Outboard gasoline — four stroke',
+      'Outboard gasoline — two stroke',
+      'Inboard gasoline — freshwater cooled',
+      'Inboard diesel — freshwater cooled',
+      'Inboard diesel — raw water cooled',
+      'Sterndrive — gasoline',
+    ],
+    'drive-type':  ['Outboard','Direct drive','V-drive','IPS pod drive','Sterndrive','Saildrive'],
+    'eng-beds':    [
+      'Molded fiberglass engine beds — percussion sounded, uniform structural condition',
+      'Aluminum engine beds — well secured to longitudinal stringer grid, serviceable',
+      'All tabbing at stringer-to-hull bonding areas uniform, free of delamination',
+    ],
+    'fuel-lines':  [
+      'USCG equivalent A-1 flexible fuel line — serviceable throughout',
+      'USCG equivalent A-1 and A-2 fuel hose — serviceable',
+      'USCG A-1 fuel hose — double clamped at all accessible connections',
+    ],
+    'fuel-filters':[
+      'Engine-mounted primary fuel filter — clean and serviceable',
+      'Racor fuel/water separator — sight bowl clear of water and sediment',
+      'Racor fuel/water separator — sediment present, cleaning recommended',
+      'Racor sight bowl — algae or water present, fuel polishing required',
+    ],
+    'fuel-shutoff':[
+      'Fuel shutoff valve readily accessible and easily operated',
+      'Fuel shutoff valve located at tank — easily exercised',
+      'Fuel shutoff valve not sighted',
+    ],
+    'eng-alarms':  [
+      'Engine alarms equipped — tested and found operable',
+      'Engine alarms equipped — not tested',
+      'Engine alarms not observed',
+    ],
+    'eng-ctrl':    [
+      'Single lever cable shift and throttle controls',
+      'Twin lever cable shift and throttle controls',
+      'Electronic single lever controls (EVC)',
+      'Dual station controls equipped',
+    ],
+    'rev-gear':    [
+      'Not applicable — outboard engine',
+      'ZF IRM V-drive reverse gear',
+      'Twin Disc direct drive reverse gear',
+      'Hurth HBW direct drive reverse gear',
+      'Velvet Drive reverse gear',
+      'Twin Disc MG5050 direct drive reverse gear',
+    ],
+    'rev-fluid':   [
+      'Reverse gear fluid full and clean — free of metallic particulates',
+      'Reverse gear fluid full — dark, oil change recommended',
+      'Metallic particulates noted on dipstick — see narrative',
+      'Not applicable — outboard engine',
+    ],
+    'gen-cond':    [
+      'Generator started readily with no excess noise, smoke, vibration, or over-cranking',
+      'Generator serviceable — minor oxidation noted, see narrative',
+      'Generator not tested — winterized at time of inspection',
+      'Generator deficiencies noted — see narrative',
+    ],
+    'fuel-quality':[
+      'Fuel system clean — no water, sediment, or algae noted',
+      'Minor sediment in Racor sight bowl — cleaning recommended',
+      'Algae present in filter — fuel polishing required before service',
+      'Water in filter — immediate attention required prior to service',
+    ],
+    'dual-alt':    [
+      'Single alternator — non-conductive boot equipped, serviceable',
+      'Dual alternators per engine — both serviceable, non-conductive boots equipped',
+      'Alternator serviceable — free of oxidation, copper bundles uniform',
+    ],
+  },
+  steering: {
+    'steer-type':  [
+      'Single helm to Sea Star hydraulic ram assembly',
+      'Single helm to Hynautic hydraulic ram assembly',
+      'Wire-controlled quadrant — Edson pedestal',
+      'Tiller steering',
+      'Volvo EVC electronic vessel control with dual joystick',
+    ],
+    'steer-sys':   ['Hydraulic ram','Wire/quadrant','Electronic (EVC/DPS)','Tiller'],
+    'steer-stations':['Single station','Dual station — both operable','Single station + autopilot'],
+    'steer-access':[
+      'Accessed from lazarette and transom — serviceable',
+      'Accessed from beneath helm — serviceable',
+      'Partially obscured by generator — accessible portions serviceable',
+    ],
+    'steer-ease':  [
+      'Helm exercised chock to chock — no unusual play or resistance',
+      'Estimated quarter turn play — serviceable, monitoring recommended',
+      'Estimated half turn play — hydraulic inspection recommended',
+      'Significant play requiring multiple rotations — hydraulic service required',
+    ],
+    'steer-leads': [
+      'Hydraulic lines well led — no evidence of weeping at fittings',
+      'No evidence of hydraulic fluid weeping at fittings or ram assembly',
+      'Minor checking noted on rubber hoses — monitoring recommended',
+    ],
+    'steer-shelf': [
+      'Steering shelf serviceable — no water intrusion noted',
+      'Water intrusion noted at steering shelf — partial structural degradation, see narrative',
+    ],
+    'rudder-stop': [
+      'Integrated rudder stops — functional, adequate stopping power',
+      'Stainless steel rudder stop — serviceable, adequate stopping power',
+      'Wooden rudder stops — well secured, adequate stopping power',
+    ],
+    'trim-tabs':   [
+      'Lenco electric trim tabs — operable, sweeper seals serviceable',
+      'Bennett hydraulic trim tabs — operable, no hydraulic weeping noted',
+      'Humphree interceptors — operable',
+      'Trim tabs not equipped',
+    ],
+    'autopilot':   [
+      'Raymarine autopilot — energized and found operable',
+      'Simrad autopilot — energized and found operable',
+      'Garmin autopilot — energized and found operable',
+      'Volvo Penta Shadow Drive — integrated into EVC system',
+      'Autopilot not equipped',
+      'Autopilot equipped — not tested at time of inspection',
+    ],
+    'bow-thr':     [
+      'Bow thruster not equipped',
+      'Bow thruster — operable, directional control confirmed, overcurrent protection identified',
+      'Bow thruster decommissioned — wiring condition see narrative',
+    ],
+    'pedestal':    [
+      'Edson pedestal — firmly affixed, fasteners serviceable',
+      'Lewmar pedestal — firmly affixed, serviceable',
+      'Pedestal fasteners showing oxidation — rebedding recommended from preventative standpoint',
+    ],
+  },
+  electrical: {
+    'wire-type':   [
+      '12V DC ship\'s system',
+      '12V DC ship\'s system and 120V shore power',
+      '12V DC ship\'s system and 120V + 240V shore power',
+      '12V and 24V DC ship\'s system and 120V shore power',
+      '24V DC ship\'s system and 120V + 240V shore power',
+    ],
+    'wire-cond':   [
+      'All accessible wiring well led, secured on an 18" schedule, free of damage',
+      'Largely well led and secured — minor unsecured runs noted, see narrative',
+      'Accessible wiring serviceable — deficiencies noted, see narrative',
+    ],
+    'panel-type':  [
+      'Circuited DC switch panel',
+      'DC circuit breaker panel',
+      'Combined AC and DC circuit breaker panel',
+      'DIN Rail switchboard — AC distribution',
+      'Separate AC and DC panels',
+    ],
+    'batt-type':   [
+      '12V Group 27 lead acid batteries',
+      '12V Group 31 lead acid batteries',
+      '12V Group 31 AGM batteries',
+      '12V Group 24 lead acid batteries',
+      '6V lead acid batteries wired in series to produce 12V',
+      '6V AGM batteries wired in series to produce 24V',
+      'Lithium iron phosphate batteries',
+    ],
+    'batt-config': [
+      'Independent house and engine start banks — emergency parallel capability',
+      'Series configuration (6V → 12V) — parallel for combined amperage',
+      'Series then parallel (6V → 12V → parallel banks)',
+      'Series configuration (6V → 24V)',
+      'Parallel banks — single bank selector switch',
+    ],
+    'batt-install':[
+      'Secured in acid-proof electrolyte-containing bins with nylon strapping',
+      'Secured with nylon strapping in non-conductive battery boxes',
+      'Secured in dedicated acid-proof battery boxes — no shifting noted',
+    ],
+    'shore-pwr':   [
+      '120V shore power — inlet in serviceable condition',
+      '120V and 240V shore power — both inlets serviceable',
+      'Shore power not equipped',
+      'Shore power inlet condition — see narrative',
+    ],
+    'galv-iso':    [
+      'Galvanic isolator equipped — per ABYC A-28',
+      'Galvanic isolator not observed — installation recommended',
+      'Isolation transformer equipped',
+      'Not applicable — no shore power equipped',
+    ],
+    'dc-sys':      [
+      'All equipped DC electronics tested — no deficiencies noted',
+      'DC electronics tested — deficiencies noted, see narrative',
+      'DC systems not fully tested — vessel winterized at time of inspection',
+    ],
+  },
+  tankage: {
+    'fuel-num':    [
+      '(1) Gasoline fuel tank',
+      '(1) Diesel fuel tank',
+      '(2) Gasoline fuel tanks',
+      '(2) Diesel fuel tanks',
+      '(1) Primary diesel + (1) diesel generator tank',
+    ],
+    'fuel-mat':    [
+      '5052 Aluminum — rectangular welded construction',
+      '5052 Aluminum — L-shaped welded construction',
+      'Cross-linked polyethylene',
+      'Integral molded fiberglass',
+      'Stainless steel',
+    ],
+    'fuel-secure': [
+      'Tank secured — no movement when jostled',
+      'Tank secured with mechanical strapping — no movement',
+      'Tank chocked and strapped in place — well secured from shifting',
+    ],
+    'fuel-access': [
+      'Accessible through lazarette spaces',
+      'Partially accessible through overhead hatches',
+      'Largely obscured beneath fixed joinery — direct inspection not possible',
+      'Top and trailing edge accessible — leading edge obscured',
+    ],
+    'fuel-bond':   [
+      'Tank appears to be bonded — per ABYC H-24',
+      'Bonding not confirmed — tank largely obscured',
+      'Tank not bonded — deficiency per ABYC H-24, bonding required',
+    ],
+    'fuel-cond':   [
+      'Serviceable appearance — no leaks, pitting, or fuel odors',
+      'Light cosmetic corrosion noted — not of structural significance',
+      'No stains, odors, or pools of fuel noted in proximity to tank or bilge',
+    ],
+    'water-mat':   [
+      'Cross-linked polyethylene tank',
+      '5052 Aluminum tank',
+      'Integral molded fiberglass tank',
+      'Stainless steel tank',
+    ],
+    'waste-mat':   [
+      'Cross-linked polyethylene Type III MSD',
+      'Integral molded fiberglass Type III MSD',
+      'Stainless steel waste holding tank',
+    ],
+    'waste-cond':  [
+      'Serviceable — no leaks, structural deformities, or odors',
+      'Free of cracks, bulging, or signs of improper winterization',
+      'Waste odor present — see narrative',
+    ],
+    'y-valve':     [
+      'Y-valve configured to direct waste to holding tank — handle intact and operable',
+      'Y-valve handle intact and easily operated',
+      'Y-valve lever snapped — replacement required prior to service',
+    ],
+  },
+  safety: {
+    'fire-builtin':['Not equipped','Automatic fixed fire suppression system — discharge indicator shows not deployed, manual release accessible','Automatic fixed system — discharge indicator pulled, recharge required'],
+    'fire-held':   [
+      '(1) USCG approved Type B-II extinguisher',
+      '(2) USCG approved Type B-II extinguishers',
+      '(1) USCG approved Type B-I extinguisher',
+      '(2) USCG approved Type B-I extinguishers',
+      'Not observed — required per 33 CFR 175.15',
+    ],
+    'fire-exp':    [
+      'Service tags current — charges in the operable range',
+      'Extinguisher(s) expired — replacement required',
+      'Service tags current — gauges in the serviceable range',
+    ],
+    'bilge-cond':  [
+      'Bilge pump(s) found operable in manual override and automatic mode',
+      'Float switch tested — activated pump at appropriate level',
+      'Bilge pump operable — float switch untested',
+    ],
+    'hwa':         [
+      'High water alarm not equipped — recommended per ABYC H-22',
+      'High water alarm equipped — tested and found operable',
+      'Not applicable — no enclosed accommodation space',
+    ],
+    'anchor':      [
+      'Fortress FX-11 aluminum anchor',
+      'Danforth aluminum anchor',
+      'CQR plow anchor — galvanized',
+      'Delta plow anchor — stainless steel',
+      'Rocna anchor — galvanized',
+      'Lewmar plow anchor',
+    ],
+    'rode':        [
+      'Estimated 5\' of 3/8" chain to 100\' of rope rode',
+      'Estimated 10\' of 3/8" chain to 150\' of rope rode',
+      'All chain rode — 3/8"',
+      'All rope rode',
+    ],
+    'horn':        [
+      '12V electric horn — found operable',
+      'Manual air horn — serviceable',
+      'Sound signaling device not observed — required per 33 CFR 175.40',
+    ],
+    'lifering':    [
+      'Type IV throwable device equipped — serviceable',
+      'USCG approved Type IV ring buoy equipped — serviceable',
+      'Throwable device not observed — required on vessels 16ft and over per 33 CFR 175.10',
+    ],
+    'pfds':        [
+      'Adequate count — all USCG approved, serviceable condition',
+      'Type II PFDs — adequate count, USCG approved',
+      'Type III PFDs — adequate count, USCG approved',
+      'PFD count insufficient — additional PFDs required',
+    ],
+    'flares':      [
+      'Visual distress signals within printed expiration date',
+      'Visual distress signals expired — replacement required per USCG',
+      'Visual distress signals not observed',
+    ],
+    'co':          [
+      'Carbon monoxide detector equipped — tested and found operable',
+      'Carbon monoxide detector not equipped — required per ABYC A-24',
+      'Carbon monoxide detector recommended — ABYC A-24',
+    ],
+    'smoke':       [
+      'Smoke detector equipped — serviceable',
+      'Smoke detector not equipped — required per NFPA 302 on vessels with sleeping accommodations',
+      'Smoke detector recommended',
+    ],
+    'gfci':        [
+      'All 120V outlets found to be GFCI protected — tested',
+      'Head and galley outlets GFCI protected — tested',
+      'GFCI protection not equipped — required per ABYC E-11',
+    ],
+    'epirb':       [
+      'EPIRB 406MHz equipped — NOAA registration current, battery within service date',
+      'PLB equipped — registration current, battery within service date',
+      'EPIRB battery last certified [year] — recertification required',
+      'EPIRB not equipped',
+    ],
+    'navlights':   [
+      'All navigation lights energized and found operable',
+      'Bow, stern, and masthead lights found operable — anchor light not tested',
+      'One or more navigation lights inoperable — see narrative',
+    ],
+  },
+  electronics: {
+    'depth':       [
+      'Depth sounder equipped — transom-mounted transducer, returning signal',
+      'Depth sounder equipped — through-hull transducer, returning signal',
+      'Dual depth sounder transducers equipped',
+    ],
+    'vhf':         [
+      'Icom VHF radio — operable on channel 16, DSC equipped',
+      'Standard Horizon VHF radio — operable on channel 16, DSC equipped',
+      'Cobra VHF radio — operable on channel 16',
+      'VHF radio operable on channel 16 — DSC not equipped, recommended',
+    ],
+    'ac':          [
+      'Air conditioning — cooling and heating function tested, operable',
+      'Air conditioning — cooling function tested, operable',
+      'Air conditioning not tested — winterized at time of inspection',
+      'Air conditioning not equipped',
+    ],
+    'waterheater': [
+      '120V and engine heated water heater — pressure/temperature relief valve present per ABYC H-23',
+      '120V electric water heater — pressure/temperature relief valve present',
+      'Engine heated water heater — serviceable',
+      'LP water heater — serviceable',
+      'Water heater winterized — not tested at time of inspection',
+    ],
+    'batt-charger':[
+      'Battery charger operable — cycling through bulk, absorption, and float stages',
+      'Battery charger output voltage appropriate — serviceable',
+      'Battery charger fault code noted — see narrative',
+    ],
+    'gen':         [
+      'Generator — see machinery section for operational notes',
+      'Generator AC output confirmed at distribution panel',
+      'Generator not tested — winterized at time of inspection',
+    ],
+    'windlass':    [
+      'Electric anchor windlass — operable, up/down and free-spool function confirmed',
+      'Anchor windlass not equipped',
+      'Anchor windlass not tested — vessel hauled ashore at time of inspection',
+    ],
+    'inverter':    [
+      'Inverter equipped — operable, output voltage appropriate',
+      'Inverter not equipped',
+      'Inverter equipped — ungrounded terminal not equipped with non-conductive boot, deficiency per ABYC E-11',
+    ],
+  },
+  rigging: {
+    'mast-mat':    [
+      'Aluminum — single spreader keel-stepped rig',
+      'Aluminum — double spreader keel-stepped rig',
+      'Aluminum — fractional keel-stepped rig',
+      'Carbon fiber — keel-stepped',
+      'Aluminum — deck-stepped',
+    ],
+    'mast-status': [
+      'Mast stepped — inspected in place',
+      'Mast stored ashore — professionally decommissioned and wrapped for winter',
+      'Mast stored ashore — inspected in rack storage',
+    ],
+    'st-rig-type': [
+      '1x19 stainless steel wire rigging with swaged terminals',
+      'Stainless steel rod rigging with toggle terminals',
+      'Synthetic Dyneema standing rigging',
+      '1x19 wire with mechanical (Sta-Lok or Hi-Mod) terminals',
+    ],
+    'st-rig-cond': [
+      'Serviceable — consistent with vessel\'s age and service history',
+      'Approaching 10-year replacement interval — replacement recommended',
+      'At or past 10-year replacement interval — replacement required',
+      'Recently replaced — like-new condition',
+    ],
+    'chainplate-type':['External stainless steel — deck-mounted','Internal — through-deck penetrations','Inboard through-bolted to structural members'],
+    'chainplate-cond':['Serviceable — no staining at deck penetrations','Oxidized staining at penetrations — rebedding recommended','Significant staining — rebedding required, potential moisture intrusion'],
+    'furler-cond': [
+      'Harken roller furler — serviceable, furling line in serviceable condition',
+      'Furlex roller furler — serviceable',
+      'Roller furler serviceable — furling line aged, replacement recommended',
+      'In-mast furling — serviceable',
+    ],
+    'run-rig-cond':[
+      'Running rigging in serviceable condition — commensurate with age and use',
+      'Halyards recently replaced — like-new condition',
+      'Chafe noted on one or more lines — monitoring recommended',
+    ],
+    'backstay':    [
+      'Backstay tension appropriate',
+      'Bobstay loose — tuning required prior to offshore use',
+      'Backstay adjuster equipped and operable',
+    ],
+    'sails':       [
+      'All sails serviceable — crisp appearance, free of tears or UV damage',
+      'Mainsail and headsail serviceable',
+      'Sails removed from vessel for winter storage',
+      'UV sacrificial cover serviceable',
+    ],
+    'boom-cond':   [
+      'Boom serviceable — free of impacts or deformation',
+      'Boom sheaves worn with age — replacement recommended',
+      'Gooseneck rivets loose — refastening required',
+    ],
+  },
+};
+
+/* ── Render chip row for a given section/key ── */
+function renderChips(sid, key, currentVal) {
+  const sectionChips = CHIPS[sid];
+  if(!sectionChips) return '';
+  const chips = sectionChips[key];
+  if(!chips || !chips.length) return '';
+
+  return `<div class="chip-row" data-sid="${sid}" data-key="${key}">` +
+    chips.map(chip => {
+      const isActive = currentVal && currentVal.trim() === chip.trim();
+      return `<button type="button" class="chip${isActive?' chip-active':''}"
+        onclick="chipFill(this)" data-sid="${sid}" data-key="${key}" data-val="${chip.replace(/"/g,'&quot;')}">${chip}</button>`;
+    }).join('') +
+  `</div>`;
+}
+
+/* ── Fill input from chip tap ── */
+function chipFill(btn) {
+  const sid = btn.dataset.sid;
+  const key = btn.dataset.key;
+  const value = btn.dataset.val;
+  if(!sid || !key) return;
+  // Toggle: if already active, clear field
+  const isActive = btn.classList.contains('chip-active');
+  const inputId = sid + '-' + key;
+  const el = document.getElementById(inputId);
+  if(isActive) {
+    // Clear
+    if(el) { el.value = ''; sv(sid, key, ''); }
+    btn.classList.remove('chip-active');
+    return;
+  }
+  // Fill
+  if(el) { el.value = value; sv(sid, key, value); }
+  // Update active state
+  const row = btn.closest('.chip-row');
+  if(row) {
+    row.querySelectorAll('.chip').forEach(c => c.classList.remove('chip-active'));
+    btn.classList.add('chip-active');
+  }
+}
+
+
 /* ── Build section tabs ── */
 function buildSections(){
   const secs=getSecs();
@@ -24110,12 +25389,16 @@ function buildSecHTML(sec){
       h+=`</div>`;
     }
     const hasPrefill = typeof NARRATIVE_PREFILL !== 'undefined' && NARRATIVE_PREFILL[sec.id];
-    h+=`<div style="display:flex;gap:6px;margin-bottom:5px;flex-wrap:wrap;">`;
-    if(hasPrefill) h+=`<button onclick="prefillNarrative('${sec.id}')" style="font-size:12px;padding:4px 10px;background:#E8F0FB;color:#1B3A6B;border:1px solid #b8d0ef;border-radius:5px;cursor:pointer;">📝 Pre-fill template</button>`;
-    h+=`<button onclick="openBoilerplate('${sec.id}')" style="font-size:12px;padding:4px 10px;background:#f5f8f5;color:#2d6a2d;border:1px solid #b0d0b0;border-radius:5px;cursor:pointer;">📄 Boilerplate</button>`;
+    h+=`<div class="narrative-card">`;
+    h+=`<div class="narrative-label">Narrative Notes</div>`;
+    h+=`<div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">`;
+    if(hasPrefill) h+=`<button onclick="prefillNarrative('${sec.id}')" style="font-size:12px;font-weight:600;padding:5px 12px;background:var(--gold-pale);color:var(--gold);border:1px solid rgba(201,147,58,0.35);border-radius:20px;cursor:pointer;font-family:inherit;">📝 Pre-fill</button>`;
+    h+=`<button onclick="openBoilerplate('${sec.id}')" style="font-size:12px;font-weight:600;padding:5px 12px;background:var(--teal-pale);color:var(--teal);border:1px solid rgba(13,115,119,0.3);border-radius:20px;cursor:pointer;font-family:inherit;">📄 Boilerplate</button>`;
     h+=`</div>`;
-    h+=`<div class="voice-row"><textarea id="narr-${sec.id}" rows="7" placeholder="Dictate or type findings…" oninput="onNarr('${sec.id}',this)">${narr}</textarea>`;
-    h+=`<button class="mic-btn" onclick="toggleVoice('narr-${sec.id}',this)">🎤</button></div>`;
+    h+=`<div class="voice-row"><textarea id="narr-${sec.id}" rows="10" placeholder="Dictate or type findings…" oninput="onNarr('${sec.id}',this)">${narr}</textarea>`;
+    h+=`<button class="mic-btn" onclick="toggleVoice('narr-${sec.id}',this)" title="Dictate">🎤</button></div>`;
+    h+=`<div class="rec-row"><div class="rec-dot" id="rec-narr-${sec.id}"></div><div class="rec-label" id="rec-label-narr-${sec.id}"></div></div>`;
+    h+=`</div>`;
     h+=`<div class="rec-row"><div class="rec-dot" id="rec-narr-${sec.id}"></div><div class="rec-label" id="rec-label-narr-${sec.id}"></div></div>`;
     h+=`<div class="pin-strip">`;
     h+=`<select id="pp-${sec.id}"><option value="red">Red *</option><option value="blue" selected>Blue</option><option value="green">Green</option></select>`;
@@ -25637,191 +26920,6 @@ function restoreRegType(type){
   if(inp) inp.placeholder = info.placeholder;
 }
 
-
-/* ══════════════════════════════════════════════════════════════
-   QUICK-FILL CHIPS
-   Each entry: sectionId → fieldKey → array of chip labels
-   Tapping a chip fills the input and saves to state instantly.
-   ══════════════════════════════════════════════════════════════ */
-const CHIPS = {
-  hull: {
-    'hull-mat':    ['FRP — non-cored','FRP — cored foam','FRP — cored balsa','FRP — cored honeycomb','Aluminum','Cold-molded wood'],
-    'hull-sides':  ['Solid laminate — confirmed anchor locker + lazarette','Cored — closed-cell foam above WL','Cored — end-grain balsa above WL','Cored — composite honeycomb above WL'],
-    'resin-type':  ['Polyester','Vinyl ester','Vinylester','Epoxy'],
-    'frame-mat':   ['FRP tabbed bulkheads + longitudinal stringers','FRP tabbed bulkheads + aluminum frames','Welded aluminum frames and stringers'],
-    'deck-mat':    ['FRP laminate','FRP laminate — painted non-skid','FRP laminate — molded non-skid'],
-    'deck-core':   ['Marine plywood','Closed-cell PVC foam','End-grain balsa','Composite honeycomb'],
-    'htd-joint':   ['Sealant + mechanical through rub rail','Chemically bonded + mechanical at rub rail','Through-bolted + sealant'],
-    'rub-rail':    ['Rubber + SS half-round','Hard plastic + SS','Aluminum extrusion','Varnished wood toe rail'],
-    'hull-vent':   ['Natural flow-through','Powered blower — ignition protected','Louvered vents'],
-    'bilge-vent':  ['Natural flow-through','Powered blower — ignition protected'],
-    'hull-vent-mat':['Bronze','Marelon plastic','Stainless steel','Aluminum'],
-    'nonskid':     ['Molded — serviceable','Molded — worn','Painted — serviceable','Painted — worn, replacement recommended','Teak overlay — serviceable'],
-    'topsides-gen':['Serviceable — cosmetic UV oxidation','Serviceable — minor crazing consistent with age','Serviceable — post curing noted (cosmetic)','Uniform structural condition','Fair — prior repair noted'],
-    'decking-gen': ['Serviceable condition — see summary','Uniform structural condition, firm underfoot','Elevated moisture noted — see narrative'],
-    'bottom-gen':  ['Uniform structural condition','Minor osmotic blistering — gelcoat only','Moderate blistering — see narrative'],
-    'bilge-gen':   ['Dry and clean','Minor standing water — cleaning recommended','Oily residue — source to be investigated','Would benefit from routine cleaning'],
-    'seacocks':    ['All silicon bronze — operable','All Marelon plastic — operable','Mixed silicon bronze + Marelon — operable','One or more seized — see narrative'],
-    'hatches':     ['Weathertight — serviceable','Gaskets require cleaning','One or more gaskets require replacement'],
-    'portlights':  ['Fixed — serviceable','Opening — weathertight','Staining noted — rebedding recommended','NA'],
-    'cockpit-drains':['Serviceable — uniform condition','Hose condition serviceable','Kinked — see narrative'],
-    'cleats':      ['Well secured — mallet test','Backing plates present','Movement noted — backing plates recommended'],
-    'rails':       ['SS stanchions — well secured','SS rail — free of impacts','Lifelines — serviceable','Set screws showing play'],
-    'interior-gen':['Well-kept appearance, serviceable','Serviceable — consistent with age','Evidence of water intrusion — see narrative'],
-  },
-  bottom: {
-    'corr-prot':   ['Zinc sacrificial anodes','Aluminum sacrificial anodes','Magnesium anodes — salt water deficiency','Impressed current system'],
-    'anode-type':  ['Zinc','Aluminum','Magnesium'],
-    'anode-cond':  ['Serviceable — adequate remaining material','~25% consumed','~50% consumed — replacement due','~75% consumed — immediate replacement required','Like-new — recently replaced'],
-    'thru-mat':    ['Silicon bronze','Marelon plastic','Stainless steel','Molded FRP'],
-    'seacock-mat': ['Silicon bronze','Marelon plastic','Bronze ball valve','Full-bore ball valve'],
-    'seacock-cond':['Operable — exercised freely','All seacocks exercised freely','One or more stiff — see narrative','One or more seized — see narrative','No seacock equipped — deficiency'],
-    'sea-strainer':['Clean — serviceable','Marine growth present — cleaning recommended','Partially full of debris','Cap oxidized — monitoring recommended'],
-    'btm-paint':   ['Ablative antifouling — serviceable','Hard antifouling — serviceable','Worn — fresh coat recommended','No bottom paint','Barrier coat — recent'],
-    'btm-paint-cond':['Serviceable — adequate coverage','Worn — fresh coat recommended','Recently applied — even coverage','Peeling in areas — prep and reapply'],
-    'props':       ['3-bladed SS — serviceable','3-bladed bronze — serviceable','3-bladed aluminum — serviceable','4-bladed SS — serviceable','Blade damage noted — see narrative'],
-    'shafts':      ['SS — rotates freely, no pitting','Rotates freely — no crevice corrosion','Light pitting noted — monitoring recommended'],
-    'rudders':     ['FRP — percussion sounded, serviceable','Skeg-mounted FRP — serviceable','Spade rudder — serviceable','No excess bearing play'],
-    'cutlass':     ['Serviceable — no excess lateral movement','Wear noted — replacement recommended','Dry-rotted — replacement required'],
-    'shaft-seal':  ['Dripless seal — serviceable','Traditional packing gland — serviceable','Packing gland — sling pattern noted','Packing gland — leaking underway'],
-    'keel-type':   ['Fixed FRP keel','Lead ballast keel','Cast iron ballast keel','Encapsulated ballast'],
-    'keel-joint':  ['Uniform — no movement or staining','Tight — no gap or paint cracking','Staining noted — keel bolt inspection recommended'],
-    'dezinc':      ['None noted','Through-hulls — pink coloration noted','Propeller hub — pink coloration noted','Both through-hulls and propeller hub'],
-    'dynaplates':  ['Not equipped','Serviceable — exposed zinc surface','Painted over — effectiveness compromised','Structural loss from galvanic corrosion'],
-    'strut-bond':  ['Present — intact','Oxidized but intact','Oxidized and partially broken — replacement required','Not present'],
-  },
-  machinery: {
-    'eng-loc':     ['Aft on transom (outboard)','Centerline — inboard','Port and starboard — twin inboard','Forward cabin — inboard'],
-    'eng-type':    ['Outboard gasoline','Inboard gasoline','Inboard diesel — freshwater cooled','Inboard diesel — raw water cooled','Sterndrive gasoline'],
-    'drive-type':  ['Outboard','Direct drive','V-drive','IPS pod drive','Sterndrive','Saildrive'],
-    'eng-beds':    ['FRP — percussion sounded, uniform','Aluminum — serviceable','Tabbing uniform — no delamination'],
-    'fuel-lines':  ['USCG A-1','USCG A-1 and A-2','USCG A-1 — double clamped throughout'],
-    'fuel-filters':['Engine-mounted primary filter','Racor fuel/water separator — clean','Racor — sediment noted, cleaning recommended','Yamaha external filter — clean'],
-    'fuel-shutoff':['Readily accessible — operable','Located at tank — operable','Unsighted'],
-    'eng-alarms':  ['Equipped — tested, operable','Equipped — untested','Not observed'],
-    'eng-ctrl':    ['Single lever — cable shift + throttle','Twin lever — cable shift + throttle','Electronic single lever (EVC)','Dual station controls'],
-    'rev-gear':    ['NA — outboard','ZF IRM — V-drive','Twin Disc — direct drive','Hurth — direct drive','Velvet Drive'],
-    'rev-fluid':   ['Full — clean, no particulates','Full — dark, change recommended','Metallic particulates noted — see narrative','NA — outboard'],
-    'gen-cond':    ['Started readily — no deficiencies','Serviceable — minor oxidation','Generator not tested — winterized','See narrative for deficiencies'],
-    'fuel-quality':['Clean — no water or sediment','Minor sediment — cleaning recommended','Algae present — polishing required','Water in filter — immediate attention required'],
-    'dual-alt':    ['Single alternator','Dual alternators — both serviceable','Single — non-conductive boot equipped'],
-  },
-  steering: {
-    'steer-type':  ['Single helm — Sea Star hydraulic ram','Single helm — Hynautic hydraulic ram','Wire-controlled quadrant — Edson pedestal','Tiller','Electronic — Volvo EVC + joystick'],
-    'steer-sys':   ['Hydraulic','Wire/quadrant','Electronic (EVC)','Tiller'],
-    'steer-stations':['(1)','(2) — dual station','(1) + autopilot'],
-    'steer-access':['Easily accessed — lazarette + transom','Accessed from beneath helm','Partially obscured by generator','Accessed from cockpit + lazarette'],
-    'steer-ease':  ['Operable — no unusual play','Estimated 1/4 turn play — serviceable','Estimated 1/2 turn play — see narrative','Significant play — hydraulic service required'],
-    'steer-leads': ['Well led — serviceable','No weeping at fittings','Minor checking — monitoring recommended'],
-    'steer-shelf': ['Serviceable — no water intrusion','Water intrusion noted — partial degradation'],
-    'rudder-stop': ['Built-in — operable','SS rudder stop — adequate stopping power','Wooden stops — well secured'],
-    'trim-tabs':   ['Lenco — operable','Bennett — operable','Humphree — operable','Not equipped'],
-    'autopilot':   ['Raymarine — operable','Simrad — operable','Garmin — operable','Volvo Shadow Drive — integrated','Not equipped','Equipped — not tested'],
-    'bow-thr':     ['Not equipped','Operable — directional control confirmed','Decommissioned — see narrative'],
-    'pedestal':    ['Edson — serviceable, firmly affixed','Lewmar — serviceable','Fasteners oxidized — rebedding recommended'],
-  },
-  electrical: {
-    'wire-type':   ['12V DC','12V DC + 120V AC shore power','12V DC + 120V + 240V AC','12V + 24V DC','24V DC + 120V + 240V AC'],
-    'wire-cond':   ['Largely well led and secured','Well led on 18" schedule','Some unsecured runs — see narrative','Generally serviceable — see narrative for deficiencies'],
-    'panel-type':  ['Circuited DC switch panel','Circuit breaker panel — DC','Combined AC/DC circuit breaker panel','DIN Rail switchboard — AC','Separate AC and DC panels'],
-    'batt-type':   ['12V Group 27 lead acid','12V Group 31 lead acid','12V Group 31 AGM','12V Group 24 lead acid','6V lead acid (series → 12V)','6V AGM (series → 24V)','Lithium'],
-    'batt-config': ['Independent — emergency parallel','Series banks (6V → 12V)','Series then parallel (6V → 12V → parallel)','Series banks (6V → 24V)','Parallel banks'],
-    'batt-install':['Secured in electrolyte-containing bins','Nylon strapping in non-conductive bins','Non-conductive battery boxes','Acid-proof trays with strapping'],
-    'shore-pwr':   ['120V — inlet serviceable','120V + 240V — both inlets serviceable','Not equipped','Inlet condition — see narrative'],
-    'galv-iso':    ['Equipped — per ABYC A-28','Not observed — recommended','Not applicable'],
-    'dc-sys':      ['Tested — all circuits operable','Tested — deficiencies noted, see narrative','Not fully tested — winterized'],
-  },
-  tankage: {
-    'fuel-num':    ['(1) Gasoline','(1) Diesel','(2) Gasoline','(2) Diesel','(1) Gasoline + (1) diesel (generator)'],
-    'fuel-mat':    ['5052 Aluminum — rectangular','5052 Aluminum — L-shaped','Cross-linked polyethylene','Fiberglass integral','Stainless steel'],
-    'fuel-secure': ['Secured — no movement','Secured with mechanical strapping','Chocked and strapped in place'],
-    'fuel-access': ['Accessible — through lazarette','Partially accessible — overhead hatches','Largely obscured — fixed joinery','Top accessible — trailing/leading edge only'],
-    'fuel-bond':   ['Bonded','Not confirmed — obscured','Not bonded — deficiency per ABYC H-24'],
-    'fuel-cond':   ['Serviceable — no leaks or pitting','Light cosmetic corrosion — not structural','No stains, odors, or pools of fuel'],
-    'water-mat':   ['Cross-linked polyethylene','5052 Aluminum','Integral molded fiberglass','Stainless steel'],
-    'waste-mat':   ['Cross-linked polyethylene','Integral molded fiberglass','Stainless steel'],
-    'waste-cond':  ['Serviceable — no leaks or odors','Free of deformation or cracks','Odor present — see narrative'],
-    'y-valve':     ['Configured to direct to holding tank','Handle intact — operable','Y-valve lever snapped — replacement required'],
-  },
-  safety: {
-    'fire-builtin':['Not equipped','Automatic fixed system — not deployed','Automatic fixed system — discharge indicator serviceable'],
-    'fire-held':   ['(1) USCG Type B-II','(2) USCG Type B-II','(1) USCG Type B-I','(2) USCG Type B-I','Not observed — required per 33 CFR 175.15'],
-    'fire-exp':    ['Current — within service date','Expired — replacement required','Service tags current — gauges in green'],
-    'bilge-cond':  ['Operable — manual override + automatic','Tested — operable both modes','Float switch tested — activated appropriately'],
-    'hwa':         ['Not equipped — recommended per ABYC H-22','Equipped — tested, operable','NA — no enclosed accommodation'],
-    'anchor':      ['Fortress FX-11 — aluminum','CQR plow — galvanized','Delta plow — stainless','Danforth — aluminum','Rocna — galvanized'],
-    'rode':        ['Est. 5\' 3/8" chain to 100\' rope','Est. 10\' 3/8" chain to 150\' rope','All chain — 3/8"','All rope rode'],
-    'horn':        ['12V electric — operable','Manual air horn — serviceable','Not observed — required'],
-    'lifering':    ['Type IV throwable — serviceable','Type IV ring buoy — serviceable','Not observed — required 16ft+ per 33 CFR 175.10'],
-    'pfds':        ['Adequate count — all USCG approved','Type II — adequate count','Type III — adequate count','Count insufficient — see narrative'],
-    'flares':      ['Within expiration date','Expired — replacement required','Not observed'],
-    'co':          ['Equipped — tested operable','Not equipped — required per ABYC A-24','Not equipped — recommended'],
-    'smoke':       ['Equipped — serviceable','Not equipped — required per NFPA 302','Not equipped — recommended'],
-    'gfci':        ['All outlets GFCI protected','Head + galley GFCI protected — tested','Not equipped — required per ABYC E-11'],
-    'epirb':       ['EPIRB 406MHz — registration current','PLB — registration current','Battery within service date','Battery expired — recertification required','Not equipped'],
-    'navlights':   ['All lights operable — tested','Bow + stern operable — masthead failed','All lights inoperable — see narrative'],
-  },
-  electronics: {
-    'depth':       ['Transom-mounted transducer','Through-hull transducer','Dual transducers'],
-    'vhf':         ['Icom — operable CH16, DSC equipped','Standard Horizon — operable CH16, DSC equipped','Cobra — operable CH16','No DSC — recommended'],
-    'ac':          ['Operable — cooling + heating tested','Operable — cooling tested only','Not tested — winterized','Not equipped'],
-    'waterheater': ['120V + engine heated — pressure relief valve present','120V — pressure relief valve present','Engine heated — serviceable','LP — serviceable','Winterized — not tested'],
-    'batt-charger':['Operable — bulk/absorption/float cycling','Output voltage appropriate — serviceable','TC ERROR fault — see narrative'],
-    'gen':         ['See machinery section','Operable — AC loads confirmed','Not tested — winterized'],
-    'windlass':    ['Operable — up/down/free-spool confirmed','Not equipped','Not tested — vessel ashore'],
-    'inverter':    ['Equipped — operable','Not equipped','Terminal not booted — see narrative'],
-  },
-  rigging: {
-    'mast-mat':    ['Aluminum — single spreader, keel-stepped','Aluminum — double spreader, keel-stepped','Aluminum — fractional rig','Carbon fiber — keel-stepped','Deck-stepped'],
-    'mast-status': ['Stepped','Stored ashore — professionally decommissioned','Stored ashore — wrapped for winter'],
-    'st-rig-type': ['1x19 stainless steel wire + swage terminals','Rod rigging + toggle terminals','Synthetic Dyneema','Wire with mechanical terminals'],
-    'st-rig-cond': ['Serviceable — consistent with age','Approaching 10-year replacement interval','At or past 10-year interval — replacement recommended','Recently replaced'],
-    'chainplate-type':['External SS — deck-mounted','Internal — through-deck penetrations','Inboard through-bolted'],
-    'chainplate-cond':['Serviceable — no staining at penetrations','Staining at penetrations — rebedding recommended','Significant staining — rebedding required'],
-    'furler-cond': ['Harken — serviceable','Furlex — serviceable','Furling line serviceable','Furling line aged — replacement recommended'],
-    'run-rig-cond':['Serviceable — commensurate with age','Halyards recently replaced','Chafe evident — monitoring recommended'],
-    'backstay':    ['Appropriate tension','Bobstay loose — tuning required','Backstay adjuster equipped'],
-    'sails':       ['All sails serviceable — crisp condition','Mainsail + headsail — serviceable','Sails off vessel for winter storage','UV cover serviceable'],
-    'boom-cond':   ['Serviceable — no impacts','Sheaves worn — replacement recommended','Gooseneck rivets loose — refastening required'],
-  },
-};
-
-/* ── Render chip row for a given section/key ── */
-function renderChips(sid, key, currentVal) {
-  const sectionChips = CHIPS[sid];
-  if(!sectionChips) return '';
-  const chips = sectionChips[key];
-  if(!chips || !chips.length) return '';
-
-  return `<div class="chip-row" data-sid="${sid}" data-key="${key}">` +
-    chips.map(chip => {
-      const isActive = currentVal && currentVal.trim() === chip.trim();
-      return `<button type="button" class="chip${isActive?' chip-active':''}"
-        onclick="chipFill('${sid}','${key}',${JSON.stringify(chip)},this)">${chip}</button>`;
-    }).join('') +
-  `</div>`;
-}
-
-/* ── Fill input from chip tap ── */
-function chipFill(sid, key, value, btn) {
-  // Fill the input
-  const inputId = sid + '-' + key;
-  const el = document.getElementById(inputId);
-  if(el) {
-    el.value = value;
-    sv(sid, key, value);
-  }
-  // Toggle active state on chips in this row
-  const row = btn.closest('.chip-row');
-  if(row) {
-    row.querySelectorAll('.chip').forEach(c => c.classList.remove('chip-active'));
-    btn.classList.add('chip-active');
-    // If tapping active chip, clear it (toggle off)
-    if(el && el.value === value && btn.classList.contains('chip-active')) {
-      // Already set active above — second tap clears
-    }
-  }
-}
 
 /* ── Init ── */
 document.getElementById('survey-date').valueAsDate=new Date();
