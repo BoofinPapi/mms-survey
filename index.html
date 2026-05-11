@@ -705,7 +705,7 @@ textarea {
   font-size: 11.5px;
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
-  padding: 4px 11px;
+  padding: 5px 12px;
   background: var(--teal-pale);
   color: var(--teal);
   border: 1px solid rgba(13,115,119,0.25);
@@ -714,9 +714,19 @@ textarea {
   white-space: normal;
   word-break: break-word;
   line-height: 1.45;
-  transition: all 0.12s;
+  transition: background 0.12s, color 0.12s;
   text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  display: inline-block;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
 }
+.chip:visited { color: var(--teal); }
 .chip:active, .chip-active {
   background: var(--teal);
   color: var(--white);
@@ -25290,37 +25300,35 @@ function renderChips(sid, key, currentVal) {
   const chips = sectionChips[key];
   if(!chips || !chips.length) return '';
 
-  return `<div class="chip-row" data-sid="${sid}" data-key="${key}">` +
+  return `<div class="chip-row" data-sid="${sid}" data-key="${key}" ontouchstart="">` +
     chips.map(chip => {
       const isActive = currentVal && currentVal.trim() === chip.trim();
-      return `<button type="button" class="chip${isActive?' chip-active':''}"
-        onclick="chipFill(this)" data-sid="${sid}" data-key="${key}" data-val="${chip.replace(/"/g,'&quot;')}">${chip}</button>`;
+      const safeVal = chip.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      return `<a href="#" class="chip${isActive?' chip-active':''}" data-sid="${sid}" data-key="${key}" data-val="${safeVal}">${chip}</a>`;
     }).join('') +
   `</div>`;
 }
 
 /* ── Fill input from chip tap ── */
 function chipFill(btn) {
-  const sid = btn.dataset.sid;
-  const key = btn.dataset.key;
-  const value = btn.dataset.val;
-  if(!sid || !key) return;
-  // Toggle: if already active, clear field
+  if(!btn) return;
+  const sid = btn.dataset ? btn.dataset.sid : btn.getAttribute('data-sid');
+  const key = btn.dataset ? btn.dataset.key : btn.getAttribute('data-key');
+  const value = btn.dataset ? btn.dataset.val : btn.getAttribute('data-val');
+  if(!sid || !key || value === undefined) return;
   const isActive = btn.classList.contains('chip-active');
   const inputId = sid + '-' + key;
   const el = document.getElementById(inputId);
   if(isActive) {
-    // Clear
     if(el) { el.value = ''; sv(sid, key, ''); }
     btn.classList.remove('chip-active');
     return;
   }
-  // Fill
   if(el) { el.value = value; sv(sid, key, value); }
-  // Update active state
-  const row = btn.closest('.chip-row');
+  const row = btn.closest ? btn.closest('.chip-row') : btn.parentNode;
   if(row) {
-    row.querySelectorAll('.chip').forEach(c => c.classList.remove('chip-active'));
+    const chips = row.querySelectorAll ? row.querySelectorAll('.chip') : [];
+    chips.forEach(c => c.classList.remove('chip-active'));
     btn.classList.add('chip-active');
   }
 }
@@ -25385,7 +25393,7 @@ function buildSecHTML(sec){
       h+=`<input type="text" id="edit-new-lbl-${sid}" placeholder="Custom item label…" style="flex:1;font-size:13px;padding:5px 8px;border:1px solid #e5e3db;border-radius:6px;">`;
       h+=`<button onclick="addEditRow('${sid}')" style="font-size:12px;padding:5px 10px;background:#378ADD;color:#fff;border:none;border-radius:6px;cursor:pointer;">+ Add</button>`;
       h+=`</div></div>`;
-      h+=`<table class="abbrev-table">`;
+      h+=`<table class="abbrev-table" ontouchstart="">`;
       const custom=(S.sd[sid]||{})._customRows||[];
       const allRows=[...sec.abbrev,...custom.map(r=>[r,'custom-'+r.replace(/\s+/g,'-').toLowerCase()])];
       allRows.forEach(([lbl,key])=>{
@@ -26954,6 +26962,16 @@ function restoreRegType(type){
 /* ── Init ── */
 document.getElementById('survey-date').valueAsDate=new Date();
 document.addEventListener('DOMContentLoaded', function(){
+  // Delegated chip handler — iOS Chrome/Safari compatible
+  function handleChipEvent(e) {
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    e.preventDefault();
+    e.stopPropagation();
+    chipFill(chip);
+  }
+  document.addEventListener('click', handleChipEvent);
+  document.addEventListener('touchend', handleChipEvent, {passive: false});
   try{ checkRestore(); } catch(e){}
   try{ renderProfiles(); } catch(e){}
   try{ renderReportManager(); } catch(e){}
